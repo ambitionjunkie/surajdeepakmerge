@@ -21,11 +21,10 @@ import android.widget.Toast;
 import com.attendanceapp.AppConstants;
 import com.attendanceapp.LoginActivity;
 import com.attendanceapp.R;
-import com.attendanceapp.StudentDashboardActivity;
-import com.attendanceapp.models.Student;
+import com.attendanceapp.models.User;
 import com.attendanceapp.utils.AndroidUtils;
-import com.attendanceapp.utils.DataUtils;
 import com.attendanceapp.utils.WebUtils;
+import com.google.gson.Gson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,46 +34,46 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Attendee_AddEventActivity extends Activity {
-
     private static final String TAG = Attendee_AddEventActivity.class.getSimpleName();
     public static final String EXTRA_IS_FIRST_TIME = AppConstants.EXTRA_IS_FIRST_TIME;
 
-    EditText classCodeEditText, classNameEditText;
+    EditText eventCodeEditText, eventNameEditText;
     Button done, skip;
+
     ImageView saveButton;
-    TextView addAnotherClass;
+    TextView addAnotherEvent;
     LayoutInflater layoutInflater;
     SharedPreferences sharedPreferences;
+    protected Gson gson = new Gson();
 
-    private Student student;
+    private User user;
     protected boolean isFirstTime;
-    private boolean isClassAdded;
+    private boolean isEventAdded;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_student_add_class);
+        setContentView(R.layout.activity_attendee_add_event);
 
         sharedPreferences = AndroidUtils.getCommonSharedPrefs(getApplicationContext());
         String userJson = sharedPreferences.getString(AppConstants.KEY_LOGGED_IN_USER, null);
 
         if (userJson != null) {
-            student = DataUtils.getStudentFromJsonString(userJson);
+            user = gson.fromJson(userJson, User.class);
         } else {
             startActivity(new Intent(Attendee_AddEventActivity.this, LoginActivity.class));
             finish();
         }
 
         isFirstTime = getIntent().getBooleanExtra(EXTRA_IS_FIRST_TIME, false);
-
         layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-        classNameEditText = (EditText) findViewById(R.id.className);
-        classCodeEditText = (EditText) findViewById(R.id.classCode);
+        eventNameEditText = (EditText) findViewById(R.id.eventName);
+        eventCodeEditText = (EditText) findViewById(R.id.eventCode);
         saveButton = (ImageView) findViewById(R.id.saveButton);
-        addAnotherClass = (TextView) findViewById(R.id.addAnotherClass);
+        addAnotherEvent = (TextView) findViewById(R.id.addAnotherEvent);
         skip = (Button) findViewById(R.id.skip);
         done = (Button) findViewById(R.id.done);
 
@@ -82,21 +81,21 @@ public class Attendee_AddEventActivity extends Activity {
             @Override
             public void onClick(View v) {
                 Map<String, String> keysAndValues = new HashMap<>();
-                keysAndValues.put("class_code", classCodeEditText.getText().toString().trim());
-                keysAndValues.put("class_name", classNameEditText.getText().toString().trim());
-                keysAndValues.put("student_email", student.getEmail());
+                keysAndValues.put("event_code", eventCodeEditText.getText().toString().trim());
+                keysAndValues.put("event_name", eventNameEditText.getText().toString().trim());
+                keysAndValues.put("event_userid", user.getUserId());
                 keysAndValues.put("status", "1");
 
                 // finally upload data to server using async task
-                uploadDataAsync(AppConstants.URL_ADD_CLASS_BY_STUDENT, keysAndValues);
+                uploadDataAsync(AppConstants.KR_ADD_EVENT_BY_ATTENDEE, keysAndValues);
             }
         });
 
-        addAnotherClass.setOnClickListener(new View.OnClickListener() {
+        addAnotherEvent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                classCodeEditText.setText("");
-                classNameEditText.setText("");
+                eventNameEditText.setText("");
+                eventCodeEditText.setText("");
             }
         });
 
@@ -131,8 +130,8 @@ public class Attendee_AddEventActivity extends Activity {
                             makeToast(jObject.getString("Error"));
 
                         } else {
-                            makeToast("Class is saved!");
-                            isClassAdded = true;
+                            makeToast("Event is saved!");
+                            isEventAdded = true;
                             onBackPressed();
                         }
 
@@ -156,11 +155,11 @@ public class Attendee_AddEventActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (isFirstTime || isClassAdded) {
+        if (isFirstTime || isEventAdded) {
             updateDataAsync();
             return;
         }
-        startActivity(new Intent(Attendee_AddEventActivity.this, StudentDashboardActivity.class));
+        startActivity(new Intent(Attendee_AddEventActivity.this, Attendee_DashboardActivity.class));
         finish();
     }
 
@@ -206,7 +205,7 @@ public class Attendee_AddEventActivity extends Activity {
                 }
                 progressDialog.dismiss();
 
-                startActivity(new Intent(Attendee_AddEventActivity.this, StudentDashboardActivity.class));
+                startActivity(new Intent(Attendee_AddEventActivity.this, Attendee_DashboardActivity.class));
                 finish();
 
 

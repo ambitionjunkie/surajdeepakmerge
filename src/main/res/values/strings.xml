@@ -90,7 +90,7 @@
     <string name="hint_drop_down">image</string>
     <string name="title_activity_update_password">UpdatePasswordActivity</string>
     <string name="no_class_data">You have no classes. Please tap the + button to setup one.</string>
-    <string name="no_company_data">You have no meeting place. Please tap the + button to setup one.</string>
+    <string name="no_company_data">You have no company. Please tap the + button to setup one.</string>
     <string name="no_event_data">You have no event. Please tap the + button to setup one.</string>
     <string name="no_parent_data">You have no child. Please tap the + button to add one.</string>
     <string name="text_take_attendance">Take Attendance</string>

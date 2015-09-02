@@ -54,7 +54,7 @@ public class TeacherTakeAttendanceCurrentLocationActivity extends Activity imple
     private ListAdapter listAdapter;
     protected TeacherClass teacherClass;
     UserUtils userUtils;
-    boolean val=false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -147,11 +147,9 @@ public class TeacherTakeAttendanceCurrentLocationActivity extends Activity imple
         switch (v.getId()) {
             case R.id.absenceLayout:
                 showAbsentList();
-                val=false;
                 break;
             case R.id.presentLayout:
                 showPresentList();
-                val=true;
                 break;
         }
     }
@@ -217,12 +215,6 @@ public class TeacherTakeAttendanceCurrentLocationActivity extends Activity imple
 //            holder.studentName.setText(attendance.getUsername());
             holder.studentName.setText(attendance.getEmail());
 
-            if(val){
-                holder.marker.setText("Mark as absent");
-            }
-            else{
-                holder.marker.setText("Mark as here");
-            }
             if (hideMarkerButton) {
                 holder.marker.setVisibility(View.GONE);
             } else {
@@ -230,19 +222,11 @@ public class TeacherTakeAttendanceCurrentLocationActivity extends Activity imple
                 holder.marker.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if(val){
-                            final int position = (Integer) v.getTag();
-                            System.out.println("removing position = " + position);
-                            absentStudentsList.add(presentStudentsList.get(position));
-                            presentStudentsList.remove(position);
-                            listAdapter.notifyDataSetChanged();
-                        }else {
-                            final int position = (Integer) v.getTag();
-                            System.out.println("removing position = " + position);
-                            presentStudentsList.add(absentStudentsList.get(position));
-                            absentStudentsList.remove(position);
-                            listAdapter.notifyDataSetChanged();
-                        }
+                        final int position = (Integer) v.getTag();
+                        System.out.println("removing position = " + position);
+                        presentStudentsList.add(absentStudentsList.get(position));
+                        absentStudentsList.remove(position);
+                        listAdapter.notifyDataSetChanged();
                     }
                 });
             }

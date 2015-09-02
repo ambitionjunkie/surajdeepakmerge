@@ -3,7 +3,6 @@ package com.attendanceapp.utils;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -11,7 +10,6 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.attendanceapp.AppConstants;
 import com.attendanceapp.Contact_us;
@@ -22,18 +20,7 @@ import com.attendanceapp.RegisterActivity;
 import com.attendanceapp.activities.AddUserViewActivity;
 import com.attendanceapp.activities.SearchActivity;
 import com.attendanceapp.adapters.UserViewsAdapter;
-import com.attendanceapp.models.CircleTransform;
 import com.attendanceapp.models.User;
-import com.squareup.picasso.MemoryPolicy;
-import com.squareup.picasso.NetworkPolicy;
-import com.squareup.picasso.Picasso;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class NavigationPage implements View.OnClickListener {
     private static final int REQUEST_EDIT_ACCOUNT = 100;
@@ -95,73 +82,8 @@ public class NavigationPage implements View.OnClickListener {
         userUtils = new UserUtils(activity);
         notificationStatus.setText(sharedPreferences.getBoolean(AppConstants.IS_NOTIFICATIONS_ON, true) ? "On" : "Off");
         new UserViewsAdapter(activity, user);
-        getImage();
     }
 
-    private void makeToast(String title) {
-        Toast.makeText(activity, title, Toast.LENGTH_LONG).show();
-    }
-    private void getImage(){
-        Map<String, String> keysValues = new HashMap<>();
-        keysValues.put("user_id",user.getUserId());
-
-        getPicAsyncTask("http://www.abdevs.com/attendance/Mobiles/get_user_image", keysValues);
-    }
-    private void getPicAsyncTask(final String url, final Map<String, String> map) {
-
-        new AsyncTask<Void, Void, String>() {
-
-            //  private ProgressDialog progressDialog = new ProgressDialog(TeacherDashboardActivity.this);
-
-            @Override
-            protected void onPreExecute() {
-//                progressDialog.setMessage("Getting profile details...");
-//                progressDialog.setCancelable(false);
-//                progressDialog.show();
-            }
-
-            @Override
-            protected String doInBackground(Void... params) {
-                try {
-                    return new WebUtils().post(url, map);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(String result) {
-//                progressDialog.dismiss();
-//
-                if (result == null) {
-                    makeToast("Error in connection");
-                } else {
-                    try {
-
-
-
-                        JSONObject jsonObject = new JSONObject(result);
-
-                        if (jsonObject.has("Error")) {
-                            makeToast(jsonObject.getString("Error"));
-                        } else {
-
-
-                            String pic=jsonObject.getJSONObject("data").getString("full_image_url")+jsonObject.getJSONObject("data").getJSONObject("userdata").getString("profile_pic");
-                            Picasso.with(activity).load(pic).transform(new CircleTransform()).placeholder(R.drawable.per).memoryPolicy(MemoryPolicy.NO_CACHE).networkPolicy(NetworkPolicy.NO_CACHE).error(R.drawable.per).into(navigationButton);
-                            System.out.println("User image is following"+pic);
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-
-                    }
-                }
-            }
-
-        }.execute();
-
-    }
 
     private void toggleNavigation() {
         Animation textAnimation = AnimationUtils.loadAnimation(activity, R.anim.left_in);

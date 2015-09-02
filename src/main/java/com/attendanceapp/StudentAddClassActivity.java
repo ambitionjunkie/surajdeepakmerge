@@ -85,7 +85,6 @@ public class StudentAddClassActivity extends Activity {
                 keysAndValues.put("class_code", classCodeEditText.getText().toString().trim());
                 keysAndValues.put("class_name", classNameEditText.getText().toString().trim());
                 keysAndValues.put("student_email", student.getEmail());
-                keysAndValues.put("user_id", student.getUserId());
                 keysAndValues.put("status", "1");
 
                 // finally upload data to server using async task
@@ -134,7 +133,6 @@ public class StudentAddClassActivity extends Activity {
                                     keysAndValues.put("class_code", classCodeEditText.getText().toString().trim());
                                     keysAndValues.put("class_name", classNameEditText.getText().toString().trim());
                                     keysAndValues.put("student_email", student.getEmail());
-                                    keysAndValues.put("user_id", student.getUserId());
                                     keysAndValues.put("status", "0");
 
                                     // finally upload data to server using async task

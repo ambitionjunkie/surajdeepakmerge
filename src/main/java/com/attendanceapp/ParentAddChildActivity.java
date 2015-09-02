@@ -1,10 +1,8 @@
 package com.attendanceapp;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -17,7 +15,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +22,7 @@ import com.attendanceapp.models.User;
 import com.attendanceapp.utils.AndroidUtils;
 import com.attendanceapp.utils.UserUtils;
 import com.attendanceapp.utils.WebUtils;
+import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -42,9 +40,9 @@ public class ParentAddChildActivity extends Activity {
 
 
     EditText classCodeEditText, classNameEditText;
-    Button done, skip, saveIt;
+    Button done, skip;
     ImageView saveButton;
-    LinearLayout addAnotherClass;
+    TextView addAnotherClass;
     ImageButton deleteButton;
 
 
@@ -60,7 +58,8 @@ public class ParentAddChildActivity extends Activity {
     protected UserUtils userUtils;
 
     private String studentName, studentId;
-    private boolean finishActivity, isEditStudent;
+    private boolean isEditStudent;
+    Gson gson = new Gson();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,8 +71,7 @@ public class ParentAddChildActivity extends Activity {
         classNameEditText = (EditText) findViewById(R.id.className);
         classCodeEditText = (EditText) findViewById(R.id.classCode);
         saveButton = (ImageView) findViewById(R.id.saveButton);
-        addAnotherClass = (LinearLayout) findViewById(R.id.addAnotherClass);
-        saveIt=(Button) findViewById(R.id.saveIt);
+        addAnotherClass = (TextView) findViewById(R.id.addAnotherClass);
         skip = (Button) findViewById(R.id.skip);
         done = (Button) findViewById(R.id.done);
         deleteButton = (ImageButton) findViewById(R.id.deleteButton);
@@ -92,12 +90,9 @@ public class ParentAddChildActivity extends Activity {
         classNameEditText.setText(studentName);
 
 
-        saveIt.setOnClickListener(new View.OnClickListener() {
+        saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                finishActivity = true;
-
                 String childName = classNameEditText.getText().toString().trim();
                 String childCode = classCodeEditText.getText().toString().trim();
 
@@ -131,6 +126,7 @@ public class ParentAddChildActivity extends Activity {
                 }
             }
         });
+
         addAnotherClass.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -138,48 +134,6 @@ public class ParentAddChildActivity extends Activity {
                 classNameEditText.setText("");
             }
         });
-       /* addAnotherClass.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finishActivity = false;
-
-                String childName = classNameEditText.getText().toString().trim();
-                String childCode = classCodeEditText.getText().toString().trim();
-
-                if (childName.length() < 1) {
-                    makeToast("Please enter child name");
-                    return;
-                }
-
-                Map<String, String> keysAndValues = new HashMap<>();
-
-                keysAndValues.put("id", "");
-
-                if (isEditStudent) {
-                    keysAndValues.put("id", studentId);
-                    keysAndValues.put("child_name", childName);
-
-                    addChildAsync(AppConstants.URL_PARENT_EDIT_CHILD, keysAndValues);
-
-                } else {
-
-                    if (childCode.length() < 6) {
-                        makeToast("Please enter correct code");
-                        return;
-                    }
-
-                    keysAndValues.put("code", childCode);
-                    keysAndValues.put("user_id", parent.getUserId());
-                    keysAndValues.put("childName", childName);
-
-                    addChildAsync(AppConstants.URL_PARENT_ADD_CHILD, keysAndValues);
-                }
-
-
-                classCodeEditText.setText("");
-                classNameEditText.setText("");
-            }
-        });*/
 
         if (isFirstTime) {
             skip.setVisibility(View.VISIBLE);
@@ -196,62 +150,42 @@ public class ParentAddChildActivity extends Activity {
             @Override
             public void onClick(View v) {
 
-                new AlertDialog.Builder(ParentAddChildActivity.this)
-                        .setMessage("Delete child!")
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
+                new AsyncTask<Void, Void, String>() {
+                    private ProgressDialog progressDialog = new ProgressDialog(ParentAddChildActivity.this);
 
-                                new AsyncTask<Void, Void, String>() {
-                                    private ProgressDialog progressDialog = new ProgressDialog(ParentAddChildActivity.this);
+                    @Override
+                    protected void onPreExecute() {
+                        progressDialog.setMessage("Please wait...");
+                        progressDialog.setCancelable(false);
+                        progressDialog.show();
+                    }
 
-                                    @Override
-                                    protected void onPreExecute() {
-                                        progressDialog.setMessage("Please wait...");
-                                        progressDialog.setCancelable(false);
-                                        progressDialog.show();
-                                    }
+                    @Override
+                    protected String doInBackground(Void... params) {
+                        HashMap<String, String> hm = new HashMap<>();
+                        hm.put("id", studentId);
+                        try {
+                            return new WebUtils().post(AppConstants.URL_PARENT_DELETE_CHILD, hm);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        return null;
+                    }
 
-                                    @Override
-                                    protected String doInBackground(Void... params) {
-                                        HashMap<String, String> hm = new HashMap<>();
-                                        hm.put("id", studentId);
-                                        try {
-                                            return new WebUtils().post(AppConstants.URL_PARENT_DELETE_CHILD, hm);
-                                        } catch (IOException e) {
-                                            e.printStackTrace();
-                                        }
-                                        return null;
-                                    }
-
-                                    @Override
-                                    protected void onPostExecute(String result) {
-                                        progressDialog.dismiss();
-                                        progressDialog.cancel();
-
-                                        if (result == null) {
-                                            makeToast("Error in deleting child!");
-                                            setResult(RESULT_CANCELED);
-                                        } else {
-                                            makeToast("Deleted successfully!");
-                                            setResult(RESULT_OK);
-                                            onBackPressed();
-                                        }
-                                    }
-                                }.execute();
+                    @Override
+                    protected void onPostExecute(String result) {
+                        if (result == null) {
+                            makeToast("Error in deleting student!");
+                            setResult(RESULT_CANCELED);
+                        } else {
+                            makeToast("Deleted successfully!");
+                            setResult(RESULT_OK);
+                            onBackPressed();
+                        }
+                    }
+                }.execute();
 
 
-                            }
-                        })
-                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                dialogInterface.dismiss();
-                                dialogInterface.cancel();
-                            }
-                        })
-                        .create()
-                        .show();
             }
         });
     }
@@ -259,17 +193,6 @@ public class ParentAddChildActivity extends Activity {
     private void addChildAsync(final String url, final Map<String, String> params) {
 
         new AsyncTask<Void, Void, String>() {
-
-            private ProgressDialog progressDialog = new ProgressDialog(ParentAddChildActivity.this);
-
-            @Override
-            protected void onPreExecute() {
-                progressDialog.setMessage("Please wait...");
-                progressDialog.setCancelable(false);
-                progressDialog.show();
-            }
-
-
             @Override
             protected String doInBackground(Void... voids) {
                 String result = null;
@@ -285,9 +208,6 @@ public class ParentAddChildActivity extends Activity {
 
             @Override
             protected void onPostExecute(String s) {
-                progressDialog.dismiss();
-                progressDialog.cancel();
-
                 if (s == null) {
                     makeToast("Error in uploading data");
                     if (isEditStudent) {
@@ -320,13 +240,15 @@ public class ParentAddChildActivity extends Activity {
     @Override
     public void onBackPressed() {
         if (isFirstTime || isClassAdded) {
-            startActivity(new Intent(ParentAddChildActivity.this, ParentDashboardActivity.class));
+            openActivity(ParentDashboardActivity.class);
         }
-        if (finishActivity) {
-            finish();
-            return;
-        }
-        super.onBackPressed();
+        finish();
     }
+
+    protected void openActivity(Class aClass) {
+        startActivity(new Intent(ParentAddChildActivity.this, aClass));
+        finish();
+    }
+
 
 }

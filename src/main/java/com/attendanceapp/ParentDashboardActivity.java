@@ -32,6 +32,7 @@ import com.attendanceapp.utils.DataUtils;
 import com.attendanceapp.utils.NavigationPage;
 import com.attendanceapp.utils.UserUtils;
 import com.attendanceapp.utils.WebUtils;
+import com.estimote.sdk.repackaged.gson_v2_3_1.com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -63,6 +64,7 @@ public class ParentDashboardActivity extends FragmentActivity implements View.On
     private Parent_ChildClassExpendableListAdapter listAdapter;
 
     UserUtils userUtils;
+    Gson gson = new Gson();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,7 +112,6 @@ public class ParentDashboardActivity extends FragmentActivity implements View.On
         }
 
 
-        //noinspection deprecation
         mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {

@@ -24,7 +24,6 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -41,8 +40,8 @@ import com.attendanceapp.models.SelectedDays;
 import com.attendanceapp.models.User;
 import com.attendanceapp.models.UserRole;
 import com.attendanceapp.utils.AndroidUtils;
+import com.attendanceapp.utils.DataUtils;
 import com.attendanceapp.utils.GPSTracker;
-import com.attendanceapp.utils.StringUtils;
 import com.attendanceapp.utils.UserUtils;
 import com.attendanceapp.utils.WebUtils;
 
@@ -50,6 +49,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -61,25 +61,24 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
 
     private static final String TAG = CreateClassEventCompanyActivity.class.getSimpleName();
     public static final String EXTRA_IS_FIRST_TIME = AppConstants.EXTRA_IS_FIRST_TIME;
-    public static final String EXTRA_EDITING_CLASS_INDEX = AppConstants.EXTRA_SELECTED_INDEX;
+    public static final String EXTRA_EDITING_CLASS_INDEX = "EXTRA_EDITING_CLASS_INDEX";
 
     private static final int REQUEST_SELECT_LOCATION = 230;
     private static final int REQUEST_SELECT_BEACONS = 231;
 
     EditText classNameEditText, districtEditText, codeEditText;
     TextView timeButton, dateButton, dayButton, locationButton, saveButton;
-    ImageView imgHelp;
     LayoutInflater layoutInflater;
     protected SharedPreferences sharedPreferences;
     GPSTracker gpsTracker;
 
-    ClassEventCompany classEventCompany = new ClassEventCompany();
+    ClassEventCompany classSetup = new ClassEventCompany();
     private User user;
-    protected boolean firstTime, addedOrEditedClass, classDeleted;
+    protected boolean isFirstTime;
+    protected boolean isAddedNewClass, isClassDeleted;
     UserUtils userUtils;
 
     final String[] MONTHS = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-    private String teacherClassId;
 
     private boolean isEditClass;
     private UserRole userRole;
@@ -91,6 +90,16 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_class_event_company);
 
+        sharedPreferences = AndroidUtils.getCommonSharedPrefs(getApplicationContext());
+        userUtils = new UserUtils(CreateClassEventCompanyActivity.this);
+        user = userUtils.getUserFromSharedPrefs();
+
+        layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        gpsTracker = new GPSTracker(CreateClassEventCompanyActivity.this);
+
+
+        isFirstTime = getIntent().getBooleanExtra(EXTRA_IS_FIRST_TIME, false);
+
         classNameEditText = (EditText) findViewById(R.id.className);
         districtEditText = (EditText) findViewById(R.id.districtField);
         codeEditText = (EditText) findViewById(R.id.codeField);
@@ -99,7 +108,6 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
         dayButton = (TextView) findViewById(R.id.dayField);
         locationButton = (Button) findViewById(R.id.locationField);
         saveButton = (Button) findViewById(R.id.saveButton);
-        imgHelp = (ImageView) findViewById(R.id.imgHelp);
 
         timeButton.setOnClickListener(this);
         dateButton.setOnClickListener(this);
@@ -107,19 +115,14 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
         locationButton.setOnClickListener(this);
         saveButton.setOnClickListener(this);
 
-
-        sharedPreferences = AndroidUtils.getCommonSharedPrefs(getApplicationContext());
-        userUtils = new UserUtils(CreateClassEventCompanyActivity.this);
-        user = userUtils.getUserFromSharedPrefs();
-
-        layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        gpsTracker = new GPSTracker(CreateClassEventCompanyActivity.this);
-
-        firstTime = getIntent().getBooleanExtra(EXTRA_IS_FIRST_TIME, false);
-
         Bundle bundle = getIntent().getExtras();
 
-        userRole = UserRole.valueOf(bundle.getInt(AppConstants.EXTRA_USER_ROLE, -1));
+        int role = bundle.getInt(AppConstants.EXTRA_USER_ROLE, -1);
+        if (role == -1) {
+            throw new RuntimeException("must pass role!");
+        }
+
+        userRole = UserRole.valueOf(role);
         setRoleBasedProperties(userRole);
 
         int index = bundle.getInt(EXTRA_EDITING_CLASS_INDEX, -1);
@@ -127,49 +130,47 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
             ClassEventCompany teacherClass = user.getClassEventCompanyArrayList().get(index);
             isEditClass = true;
 
-            teacherClassId = teacherClass.getId();
-            classEventCompany.setId(teacherClassId);
-            classEventCompany.setName(teacherClass.getName());
-            classEventCompany.setDistrict(teacherClass.getDistrict());
-            classEventCompany.setCode(teacherClass.getCode());
-            classEventCompany.setInterval(teacherClass.getInterval());
-            classEventCompany.setBeaconList(teacherClass.getBeaconList());
-            classEventCompany.setLatitude(teacherClass.getLatitude());
-            classEventCompany.setLongitude(teacherClass.getLongitude());
-            classEventCompany.setRepeatType(teacherClass.getRepeatType());
-            classEventCompany.setStartTime(teacherClass.getStartTime());
-            classEventCompany.setEndTime(teacherClass.getEndTime());
-            classEventCompany.setStartDate(teacherClass.getStartDate());
-            classEventCompany.setEndDate(teacherClass.getEndDate());
+            classSetup.setId(teacherClass.getId());
+            classSetup.setName(teacherClass.getName());
+            classSetup.setDistrict(teacherClass.getDistrict());
+            classSetup.setCode(teacherClass.getCode());
+            classSetup.setInterval(teacherClass.getInterval());
+            classSetup.setBeaconList(teacherClass.getBeaconList());
+            classSetup.setLatitude(teacherClass.getLatitude());
+            classSetup.setLongitude(teacherClass.getLongitude());
+            classSetup.setRepeatType(teacherClass.getRepeatType());
+            classSetup.setStartTime(teacherClass.getStartTime());
+            classSetup.setEndTime(teacherClass.getEndTime());
+            classSetup.setStartDate(teacherClass.getStartDate());
+            classSetup.setEndDate(teacherClass.getEndDate());
 
 
-            classNameEditText.setText(classEventCompany.getName());
+            classNameEditText.setText(classSetup.getName());
+            timeButton.setText(teacherClass.getStartTime() + " - " + teacherClass.getEndTime());
 
-            timeButton.setText(StringUtils.getTimeStringFromCalender(classEventCompany.getStartTime()));
-            timeButton.setText(timeButton.getText() + " - " + StringUtils.getTimeStringFromCalender(classEventCompany.getEndTime()));
-
-            dateButton.setText(StringUtils.getDateStringFromCalender(classEventCompany.getStartDate()));
-            dateButton.setText(dateButton.getText() + " - " + StringUtils.getDateStringFromCalender(classEventCompany.getEndDate()));
+            Calendar cal;
+            cal = classSetup.getStartDate();
+            dateButton.setText("" + MONTHS[cal.get(Calendar.MONTH) + 1] + " "
+                    + cal.get(Calendar.DAY_OF_MONTH) + ", " + cal.get(Calendar.YEAR));
+            cal = classSetup.getEndDate();
+            dateButton.setText(dateButton.getText() + " - " + MONTHS[cal.get(Calendar.MONTH) + 1]
+                    + " " + cal.get(Calendar.DAY_OF_MONTH) + ", " + cal.get(Calendar.YEAR));
 
             ((TextView) findViewById(R.id.txtTitle)).setText(teacherClass.getUniqueCode());
-            dayButton.setText(classEventCompany.getRepeatType().toString());
-            districtEditText.setText(classEventCompany.getDistrict());
-            codeEditText.setText(classEventCompany.getCode());
+            dayButton.setText(classSetup.getRepeatType().toString());
+            districtEditText.setText(classSetup.getDistrict());
+            codeEditText.setText(classSetup.getCode());
 
-            double latitude = classEventCompany.getLatitude(), longitude = classEventCompany.getLongitude();
+            double latitude = classSetup.getLatitude(), longitude = classSetup.getLongitude();
             if (latitude != 0 && longitude != 0) {
                 Address address = userUtils.getAddress(latitude, longitude);
                 locationButton.setText(userUtils.getAddressString(address));
             }
-
-            // delete button functionality
-            imgHelp.setImageResource(R.drawable.delete);
-            imgHelp.setOnClickListener(this);
         }
 
     }
 
-    String title, name, code;
+        String title, name, distt;
 
     private void setRoleBasedProperties(UserRole userRole) {
 
@@ -184,21 +185,17 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
                 name = "Event name";
 
             } else if (userRole == UserRole.Manager) {
-                title = "Meeting Place";
-                name = "Meeting Place";
-                code = "Company Code";
-
+                title = "Company Setup";
+                name = "Company name";
 
 //                 hide extra fields
-//                timeButton.setVisibility(View.GONE);
-//                dateButton.setVisibility(View.GONE);
-                districtEditText.setVisibility(View.GONE);
+                timeButton.setVisibility(View.GONE);
+                dateButton.setVisibility(View.GONE);
             }
 
 
             ((TextView) findViewById(R.id.txtTitle)).setText(title);
             classNameEditText.setHint(name);
-            codeEditText.setHint(code);
         }
     }
 
@@ -221,98 +218,8 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
             case R.id.saveButton:
                 processSaveButton();
                 break;
-            case R.id.imgHelp:
-                deleteClass();
         }
     }
-
-
-    private void deleteClass() {
-
-        new AlertDialog.Builder(CreateClassEventCompanyActivity.this)
-                .setMessage("Delete meeting!")
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-
-
-                        final String url = AppConstants.URL_DELETE_CLASS_BY_TEACHER;
-
-                        new AsyncTask<Void, Void, String>() {
-                            ProgressDialog progressDialog = new ProgressDialog(CreateClassEventCompanyActivity.this);
-
-                            @Override
-                            protected void onPreExecute() {
-                                super.onPreExecute();
-                                progressDialog.setMessage("Please wait...");
-                                progressDialog.setCancelable(false);
-                                progressDialog.show();
-                            }
-
-                            @Override
-                            protected String doInBackground(Void... params) {
-                                String result = null;
-
-                                HashMap<String, String> map = new HashMap<>();
-                                map.put("class_id", teacherClassId);
-
-                                try {
-                                    result = new WebUtils().post(url, map);
-
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                                return result;
-                            }
-
-                            @Override
-                            protected void onPostExecute(String s) {
-                                progressDialog.dismiss();
-                                JSONObject jObject;
-                                if (s == null) {
-                                    makeToast("Error in deleting!");
-
-                                } else {
-                                    try {
-                                        jObject = new JSONObject(s);
-
-                                        // check if result contains Error
-                                        if (jObject.has("Error")) {
-                                            makeToast(jObject.getString("Error"));
-
-                                        } else if (jObject.has("Message")) {
-                                            makeToast("Deleted successfully!");
-
-                                            classDeleted = true;
-                                            onBackPressed();
-
-                                        }
-
-                                    } catch (JSONException e) {
-                                        e.printStackTrace();
-                                        Log.e(TAG, "Error in parsing data: " + s);
-                                        Log.e(TAG, e.getMessage());
-                                    }
-                                }
-
-                            }
-                        }.execute();
-
-
-                    }
-                })
-                .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        dialogInterface.dismiss();
-                        dialogInterface.cancel();
-                    }
-                })
-                .create()
-                .show();
-
-    }
-
 
     private void processTimeButton() {
 
@@ -327,9 +234,18 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
             public void onClick(DialogInterface dialog, int which) {
                 int hourOfDay = timePicker.getCurrentHour();
                 int minute = timePicker.getCurrentMinute();
-
-                timeButton.setText(StringUtils.getTimeStringFromHourMinute(hourOfDay, minute));
-                classEventCompany.setStartTime(getCalenderFromTimePicker(timePicker));
+                String state = "am";
+                if (hourOfDay > 12) {
+                    hourOfDay -= 12;
+                    state = "pm";
+                } else if (hourOfDay == 0) {
+                    hourOfDay = 12;
+                } else if (hourOfDay == 12) {
+                    state = "pm";
+                }
+                String minuteString = String.valueOf(minute).length() < 2 ? "0" + minute : "" + minute;
+                timeButton.setText("" + hourOfDay + ":" + minuteString + " " + state);
+                classSetup.setStartTime(getCalenderFromTimePicker(timePicker));
                 getTimeFromUser("End Time");
             }
         });
@@ -353,7 +269,7 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
                 int dayOfMonth = datePicker.getDayOfMonth();
 
                 dateButton.setText("" + MONTHS[monthOfYear] + " " + dayOfMonth + ", " + year);
-                classEventCompany.setStartDate(getDateFromDatePicker(datePicker));
+                classSetup.setStartDate(getDateFromDatePicker(datePicker));
 
                 getDateFromUser("Select End Date");
 
@@ -365,7 +281,7 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
                         int monthOfYear = datePicker.getMonth();
                         int dayOfMonth = datePicker.getDayOfMonth();
                         dateButton.setText(dateButton.getText() + " - " + MONTHS[monthOfYear] + " " + dayOfMonth + ", " + year);
-                        classEventCompany.setEndDate(getDateFromDatePicker(datePicker));
+                        classSetup.setEndDate(getDateFromDatePicker(datePicker));
                     }
                 });
             }
@@ -429,10 +345,10 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
                 for (Integer integer1 : selectedDaysSet) {
                     SelectedDays selected_days = SelectedDays.values()[integer1];
                     System.out.println("selected_days = " + selected_days);
-                    classEventCompany.getRepeatDays().add(SelectedDays.values()[integer1]);
+                    classSetup.getRepeatDays().add(SelectedDays.values()[integer1]);
                 }
                 if (selectedDaysSet.isEmpty()) {
-                    classEventCompany.getRepeatDays().clear();
+                    classSetup.getRepeatDays().clear();
                 }
             }
         };
@@ -455,7 +371,7 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
         days.setAdapter(daysAdapter);
 
         // save first position by default
-        classEventCompany.setRepeatType(RepeatType.DAILY);
+        classSetup.setRepeatType(RepeatType.DAILY);
 
 
         final AdapterView.OnItemSelectedListener spinnerItemSelectedListener = new AdapterView.OnItemSelectedListener() {
@@ -464,7 +380,7 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
                 thirtyDaysLayout.setVisibility(View.GONE);
                 sevenDaysLayout.setVisibility(View.GONE);
 
-                classEventCompany.setRepeatType(RepeatType.values()[position]);
+                classSetup.setRepeatType(RepeatType.values()[position]);
 
                 if (position == 0 || position == 4 || position == 5 || position == 6) {
                     thirtyDaysLayout.setVisibility(View.VISIBLE);
@@ -492,7 +408,7 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                classEventCompany.setRepeatType(null);
+                classSetup.setRepeatType(null);
             }
         };
         spinner.setOnItemSelectedListener(spinnerItemSelectedListener);
@@ -507,7 +423,7 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
                 dayButton.setText(selectedOption);
 
                 String interval = days.getSelectedItem().toString();
-                classEventCompany.setInterval(Integer.valueOf(interval));
+                classSetup.setInterval(Integer.valueOf(interval));
 
                 dialog.dismiss();
                 dialog.cancel();
@@ -535,8 +451,8 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
                     latitude = location.getLatitude();
                     longitude = location.getLongitude();
 
-                    classEventCompany.setLatitude(latitude);
-                    classEventCompany.setLongitude(longitude);
+                    classSetup.setLatitude(latitude);
+                    classSetup.setLongitude(longitude);
 
                     Address address = userUtils.getAddress(latitude, longitude);
                     locationButton.setText(userUtils.getAddressString(address));
@@ -565,7 +481,7 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
                 alertDialog.dismiss();
                 alertDialog.cancel();
                 Intent intent = new Intent(CreateClassEventCompanyActivity.this, ListBeaconsActivity.class);
-                intent.putParcelableArrayListExtra(ListBeaconsActivity.EXTRA_BEACONS, classEventCompany.getBeaconList());
+                intent.putParcelableArrayListExtra(ListBeaconsActivity.EXTRA_BEACONS, classSetup.getBeaconList());
 
                 startActivityForResult(intent, REQUEST_SELECT_BEACONS);
             }
@@ -574,29 +490,29 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
 
     private void processSaveButton() {
         // get data from all fields
-        classEventCompany.setName(classNameEditText.getText().toString().trim());
-        classEventCompany.setDistrict(districtEditText.getText().toString().trim());
-        classEventCompany.setCode(codeEditText.getText().toString().trim());
+        classSetup.setName(classNameEditText.getText().toString().trim());
+        classSetup.setDistrict(districtEditText.getText().toString().trim());
+        classSetup.setCode(codeEditText.getText().toString().trim());
 
         String errorMessage = null;
 
         // validate all required fields
-        if (classEventCompany.getName() == null || classEventCompany.getName().length() < 1) {
+        if (classSetup.getName() == null || classSetup.getName().length() < 1) {
             errorMessage = "Please enter name";
-        } else if (classEventCompany.getRepeatType() == null) {
-            errorMessage = "Please select repeat type";
-        } else if ((classEventCompany.getLatitude() == 0.0d || classEventCompany.getLongitude() == 0.0d)
-                && "".equals(classEventCompany.getBeaconsJsonString())) {
+        } else if (classSetup.getRepeatType() == null) {
+            errorMessage = "Please select class repeat type";
+        } else if ((classSetup.getLatitude() == 0.0d || classSetup.getLongitude() == 0.0d)
+                && "".equals(classSetup.getBeaconsJsonString())) {
             errorMessage = "Please select location";
         }
 
-//        if (userRole != UserRole.Manager) {
-        if ((classEventCompany.getStartTime() == null || classEventCompany.getEndTime() == null)) {
-            errorMessage = "Please select start and end time";
-        } else if (classEventCompany.getStartDate() == null || classEventCompany.getEndDate() == null) {
-            errorMessage = "Please select start and end date";
+        if (userRole != UserRole.Manager) {
+            if ((classSetup.getStartTime() == null || classSetup.getEndTime() == null)) {
+                errorMessage = "Please select start and end time";
+            } else if (classSetup.getStartDate() == null || classSetup.getEndDate() == null) {
+                errorMessage = "Please select start and end date";
+            }
         }
-//        }
 
 //
 //        if (errorMessage != null) {
@@ -605,18 +521,18 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
 //        }
 
         // validate for correct values
-//                if (classEventCompany.getStartTime().after(classEventCompany.getEndTime()) || classEventCompany.getStartTime().equals(classEventCompany.getEndTime())) {
+//                if (classSetup.getStartTime().after(classSetup.getEndTime()) || classSetup.getStartTime().equals(classSetup.getEndTime())) {
 //                    errorMessage = "Start time should be less than end time";
-//                } else if (classEventCompany.getStartDate().get(Calendar.MONTH) < Calendar.getInstance().get(Calendar.MONTH)
-//                        || classEventCompany.getStartDate().get(Calendar.YEAR) < Calendar.getInstance().get(Calendar.YEAR)
-//                        || classEventCompany.getStartDate().get(Calendar.DATE) < Calendar.getInstance().get(Calendar.DATE)) {
+//                } else if (classSetup.getStartDate().get(Calendar.MONTH) < Calendar.getInstance().get(Calendar.MONTH)
+//                        || classSetup.getStartDate().get(Calendar.YEAR) < Calendar.getInstance().get(Calendar.YEAR)
+//                        || classSetup.getStartDate().get(Calendar.DATE) < Calendar.getInstance().get(Calendar.DATE)) {
 //                    errorMessage = "Start date should not be before than current date";
-//                } else if (classEventCompany.getStartDate().equals(classEventCompany.getEndDate()) || classEventCompany.getStartDate().after(classEventCompany.getEndDate())) {
+//                } else if (classSetup.getStartDate().equals(classSetup.getEndDate()) || classSetup.getStartDate().after(classSetup.getEndDate())) {
 //                    errorMessage = "Start date should be less than end date";
 //                } else
-//        if (classEventCompany.getRepeatType().equals(RepeatType.REPEAT_DAY) && classEventCompany.getRepeatDays().isEmpty()) {
+//        if (classSetup.getRepeatType().equals(RepeatType.REPEAT_DAY) && classSetup.getRepeatDays().isEmpty()) {
 //            errorMessage = "Please select repeat days";
-//        } else if (classEventCompany.getRepeatType().equals(RepeatType.REPEAT_DATE) && classEventCompany.getRepeatDates().isEmpty()) {
+//        } else if (classSetup.getRepeatType().equals(RepeatType.REPEAT_DATE) && classSetup.getRepeatDates().isEmpty()) {
 //            errorMessage = "Please select repeat dates";
 //        }
 
@@ -624,7 +540,7 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
         if (errorMessage != null) {
             makeToast(errorMessage);
         } else {
-            //Log.i(TAG, classEventCompany.toString());
+            //Log.i(TAG, classSetup.toString());
 
             String formatForTime = "%d:%d";
             String formatForDate = "%d/%d/%d";
@@ -636,52 +552,47 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
             keysAndValues.put("status", "1");
 
             if (isEditClass) {
-                keysAndValues.put("id", classEventCompany.getId());
+                keysAndValues.put("id", classSetup.getId());
             }
 
             if (userRole == UserRole.Manager) {
-                keysAndValues.put("meetingPlace", classEventCompany.getName());
+                keysAndValues.put("companyName", classSetup.getName());
             } else if (userRole == UserRole.EventHost) {
-                keysAndValues.put("eventName", classEventCompany.getName());
+                keysAndValues.put("eventName", classSetup.getName());
             } else {
-                keysAndValues.put("className", classEventCompany.getName());
+                keysAndValues.put("className", classSetup.getName());
             }
 
-//            if (userRole != UserRole.Manager) {
-            calendar = classEventCompany.getStartTime();
-            keysAndValues.put("startTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
-            calendar = classEventCompany.getEndTime();
-            keysAndValues.put("endTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
-            calendar = classEventCompany.getStartDate();
-            keysAndValues.put("startDate", String.format(formatForDate, calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR)));
-            calendar = classEventCompany.getEndDate();
-            keysAndValues.put("endDate", String.format(formatForDate, calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR)));
-//            }
+            if (userRole != UserRole.Manager) {
+                calendar = classSetup.getStartTime();
+                keysAndValues.put("startTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
+                calendar = classSetup.getEndTime();
+                keysAndValues.put("endTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
+                calendar = classSetup.getStartDate();
+                keysAndValues.put("startDate", String.format(formatForDate, calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR)));
+                calendar = classSetup.getEndDate();
+                keysAndValues.put("endDate", String.format(formatForDate, calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR)));
+            }
 
-            keysAndValues.put("latitude", String.valueOf(classEventCompany.getLatitude()));
-            keysAndValues.put("longitude", String.valueOf(classEventCompany.getLongitude()));
-            keysAndValues.put("repeatType", classEventCompany.getRepeatType().toString());
-            keysAndValues.put("repeatDays", classEventCompany.getRepeatDays().toString());
-            keysAndValues.put("interval", String.valueOf(classEventCompany.getInterval()));
-            keysAndValues.put("beacon_id", classEventCompany.getBeaconsJsonString());
+            keysAndValues.put("latitude", String.valueOf(classSetup.getLatitude()));
+            keysAndValues.put("longitude", String.valueOf(classSetup.getLongitude()));
+            keysAndValues.put("repeatType", classSetup.getRepeatType().toString());
+            keysAndValues.put("repeatDays", classSetup.getRepeatDays().toString());
+            keysAndValues.put("interval", String.valueOf(classSetup.getInterval()));
+            keysAndValues.put("beacon_id", classSetup.getBeaconsJsonString());
 
-            if (classEventCompany.getRepeatType().equals(RepeatType.WEEKLY)) {
-                String s = classEventCompany.getRepeatDays().toString();
+            if (classSetup.getRepeatType().equals(RepeatType.WEEKLY)) {
+                String s = classSetup.getRepeatDays().toString();
                 s = s.substring(1, s.length() - 1);
                 keysAndValues.put("repeatDays", s);
             }
 
-            if (userRole == UserRole.Manager) {
-                keysAndValues.put("companyCode", classEventCompany.getCode());
+            if (classSetup.getDistrict() != null) {
+                keysAndValues.put("district", classSetup.getDistrict());
+            }
 
-            } else {
-                if (classEventCompany.getDistrict() != null) {
-                    keysAndValues.put("district", classEventCompany.getDistrict());
-                }
-
-                if (classEventCompany.getCode() != null) {
-                    keysAndValues.put("code", classEventCompany.getCode());
-                }
+            if (classSetup.getCode() != null) {
+                keysAndValues.put("code", classSetup.getCode());
             }
 
             Log.i(TAG, keysAndValues.toString());
@@ -740,7 +651,7 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
 
                         } else {
                             makeToast("Saved successfully!");
-                            addedOrEditedClass = true;
+                            isAddedNewClass = true;
                             onBackPressed();
                         }
 
@@ -770,9 +681,18 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
             public void onClick(DialogInterface dialog, int which) {
                 int hourOfDay = timePicker.getCurrentHour();
                 int minute = timePicker.getCurrentMinute();
-
-                timeButton.setText(timeButton.getText() + "  -  " + StringUtils.getTimeStringFromHourMinute(hourOfDay, minute));
-                classEventCompany.setEndTime(getCalenderFromTimePicker(timePicker));
+                String state = "am";
+                if (hourOfDay > 12) {
+                    hourOfDay -= 12;
+                    state = "pm";
+                } else if (hourOfDay == 0) {
+                    hourOfDay = 12;
+                } else if (hourOfDay == 12) {
+                    state = "pm";
+                }
+                String minuteString = String.valueOf(minute).length() < 2 ? "0" + minute : "" + minute;
+                timeButton.setText(timeButton.getText() + "  -  " + hourOfDay + ":" + minuteString + " " + state);
+                classSetup.setEndTime(getCalenderFromTimePicker(timePicker));
 
             }
         });
@@ -793,7 +713,7 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
                 int monthOfYear = datePicker.getMonth();
                 int dayOfMonth = datePicker.getDayOfMonth();
                 dateButton.setText(dateButton.getText() + " - " + MONTHS[monthOfYear] + " " + dayOfMonth + ", " + year);
-                classEventCompany.setEndDate(getDateFromDatePicker(datePicker));
+                classSetup.setEndDate(getDateFromDatePicker(datePicker));
             }
         });
         builder.show();
@@ -829,35 +749,80 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
                 double lat = data.getDoubleExtra(SelectLocationActivity.EXTRA_LATITUDE, 0.0);
                 double lng = data.getDoubleExtra(SelectLocationActivity.EXTRA_LONGITUDE, 0.0);
 
-                classEventCompany.setLatitude(lat);
-                classEventCompany.setLongitude(lng);
+                classSetup.setLatitude(lat);
+                classSetup.setLongitude(lng);
 
                 locationButton.setText(userUtils.getAddressString(userUtils.getAddress(lat, lng)));
             }
         } else if (requestCode == REQUEST_SELECT_BEACONS) {
             if (resultCode == RESULT_OK) {
-                classEventCompany.setBeaconsJsonString(data.getStringExtra(TeacherSelectBeaconActivity.RESPONSE_SELECTED_BEACONS));
+                classSetup.setBeaconsJsonString(data.getStringExtra(TeacherSelectBeaconActivity.RESPONSE_SELECTED_BEACONS));
             } else {
-                classEventCompany.setBeaconsJsonString("");
+                classSetup.setBeaconsJsonString("");
             }
         }
     }
 
     @Override
     public void onBackPressed() {
-        if (firstTime) {
-            if (userRole == UserRole.Manager) {
-                startActivity(new Intent(this, Manager_DashboardActivity.class));
-                finish();
+        if (isFirstTime || isAddedNewClass) {
+            updateDataAsync();
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    protected void openActivity(Class aClass) {
+        startActivity(new Intent(CreateClassEventCompanyActivity.this, aClass));
+        finish();
+    }
+
+    private void updateDataAsync() {
+        new AsyncTask<Void, Void, String>() {
+            private ProgressDialog progressDialog = new ProgressDialog(CreateClassEventCompanyActivity.this);
+
+            @Override
+            protected void onPreExecute() {
+                progressDialog.setMessage("Please wait...");
+                progressDialog.setCancelable(false);
+                progressDialog.show();
             }
 
-        } else if (addedOrEditedClass || classDeleted) {
-            setResult(RESULT_OK);
-            finish();
+            @Override
+            protected String doInBackground(Void... params) {
+                HashMap<String, String> hm = new HashMap<>();
+                hm.put("id", user.getUserId());
+                hm.put("role", String.valueOf(userRole.getRole()));
+                try {
+                    return new WebUtils().post(AppConstants.URL_GET_DATA_BY_ID, hm);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
 
-        } else {
-            super.onBackPressed();
-        }
+            @Override
+            protected void onPostExecute(String result) {
+                progressDialog.dismiss();
+                if (result != null) {
+
+                    User teacher = user;
+                    ArrayList<ClassEventCompany> teacherClasses = DataUtils.getClassEventCompanyArrayListFromJsonString(result);
+
+                    if (teacher.getClassEventCompanyArrayList().size() != teacherClasses.size()) {
+
+                        teacher.getClassEventCompanyArrayList().clear();
+                        teacher.getClassEventCompanyArrayList().addAll(teacherClasses);
+
+                        userUtils.saveUserWithDataToSharedPrefs(teacher, User.class);
+
+                    }
+                }
+                openActivity(EventHost_DashboardActivity.class);
+                finish();
+            }
+        }.execute();
+
     }
 
 }

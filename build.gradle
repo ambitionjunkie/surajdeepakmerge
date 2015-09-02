@@ -49,7 +49,6 @@ dependencies {
     compile 'com.google.android.gms:play-services-maps:7.5.0'
     compile 'com.android.support:appcompat-v7:22.2.1'
     compile files('libs/androidannotations-api-3.3.2.jar')
-    compile 'com.squareup.picasso:picasso:2.5.2'
 //    compile files('compile-libs/androidannotations-3.3.2.jar')
 }
 

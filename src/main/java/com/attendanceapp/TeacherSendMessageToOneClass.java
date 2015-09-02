@@ -1,24 +1,18 @@
 package com.attendanceapp;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,9 +26,6 @@ import com.attendanceapp.utils.StringUtils;
 import com.attendanceapp.utils.UserUtils;
 import com.attendanceapp.utils.WebUtils;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -47,7 +38,6 @@ public class TeacherSendMessageToOneClass extends Activity implements View.OnCli
     public static final String EXTRA_TEACHER_CLASS = "EXTRA_STUDENT_CLASS";
     public static final String EXTRA_HIDE_MESSAGE_BOX = "EXTRA_HIDE_MESSAGE_BOX";
     public static final String EXTRA_SHOW_NOTIFICATIONS = "EXTRA_SHOW_NOTIFICATIONS";
-    private static final String TAG = TeacherSendMessageToOneClass.class.getSimpleName();
 
     ListView messagesListView;
     Button sendMessageButton;
@@ -57,7 +47,6 @@ public class TeacherSendMessageToOneClass extends Activity implements View.OnCli
 
     ArrayList<ClassMessage> classMessageArrayList = new ArrayList<>();
     ListAdapter listAdapter;
-    NotificationListAdapter notificationListAdapter;
     TeacherClass teacherClass;
     String allStudentEmailsInClass;
     String allStudentIdsInClass;
@@ -113,13 +102,8 @@ public class TeacherSendMessageToOneClass extends Activity implements View.OnCli
     }
 
     private void setAdapter() {
-        if (showNotifications) {
-            notificationListAdapter = new NotificationListAdapter(TeacherSendMessageToOneClass.this, classMessageArrayList);
-            messagesListView.setAdapter(notificationListAdapter);
-        } else {
-            listAdapter = new ListAdapter(TeacherSendMessageToOneClass.this, classMessageArrayList);
-            messagesListView.setAdapter(listAdapter);
-        }
+        listAdapter = new ListAdapter(TeacherSendMessageToOneClass.this, classMessageArrayList);
+        messagesListView.setAdapter(listAdapter);
 
     }
 
@@ -142,14 +126,14 @@ public class TeacherSendMessageToOneClass extends Activity implements View.OnCli
 
                 try {
 
-                    if (showNotifications) {
+//                    if (showNotifications) {
                         hm.put("class_id", teacherClass.getId());
-                        result = new WebUtils().post(AppConstants.URL_CLASS_NOTIFICATION_LIST, hm);
+//                        result = new WebUtils().post(AppConstants.URL_CLASS_NOTIFICATION_LIST, hm);
 
-                    } else {
+//                    } else {
                         hm.put("class_code", teacherClass.getClassCode());
                         result = new WebUtils().post(AppConstants.URL_STUDENT_GET_NOTIFICATIONS_ONE_CLASS, hm);
-                    }
+//                    }
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -160,13 +144,7 @@ public class TeacherSendMessageToOneClass extends Activity implements View.OnCli
             @Override
             protected void onPostExecute(Void aVoid) {
                 if (result != null) {
-
-                    if (showNotifications) {
-                        classMessageArrayList = DataUtils.getNotificationsArrayList(result);
-                    } else {
-                        classMessageArrayList = DataUtils.getMessagesArrayList(result);
-                    }
-
+                    classMessageArrayList = DataUtils.getMessagesArrayList(result);
                     sharedPreferences.edit().putString(AppConstants.KEY_LOGGED_IN_USER_NOTIFICATIONS + teacherClass.getClassCode(), result).apply();
                     setAdapter();
                     if (classMessageArrayList.size() == 0) {
@@ -239,23 +217,35 @@ public class TeacherSendMessageToOneClass extends Activity implements View.OnCli
 
     }
 
-    private class ListAdapter extends ArrayAdapter<ClassMessage> {
+    private class ListAdapter extends BaseAdapter {
+        private ArrayList<ClassMessage> messagesStringArrayList;
         LayoutInflater inflater;
+        Context context;
 
         public ListAdapter(Context context, ArrayList<ClassMessage> messagesStringArrayList) {
-            super(context, 0, messagesStringArrayList);
+            this.context = context;
             inflater = (LayoutInflater) context.getSystemService(LAYOUT_INFLATER_SERVICE);
+            this.messagesStringArrayList = messagesStringArrayList;
         }
 
 
-        class ViewHolder {
-            final TextView time;
-            final TextView message;
+        @Override
+        public int getCount() {
+            return messagesStringArrayList.size();
+        }
 
-            public ViewHolder(View view) {
-                message = (TextView) view.findViewById(R.id.message);
-                time = (TextView) view.findViewById(R.id.time);
-            }
+        @Override
+        public ClassMessage getItem(int position) {
+            return messagesStringArrayList.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        class ViewHolder {
+            TextView message, time;
         }
 
         @Override
@@ -265,184 +255,23 @@ public class TeacherSendMessageToOneClass extends Activity implements View.OnCli
 
             if (view == null) {
                 view = inflater.inflate(R.layout.list_item_class_message, null, false);
-                holder = new ViewHolder(view);
+                holder = new ViewHolder();
+
+                holder.message = (TextView) view.findViewById(R.id.message);
+                holder.time = (TextView) view.findViewById(R.id.time);
+
                 view.setTag(holder);
+            } else {
+                holder = (ViewHolder) view.getTag();
             }
 
-            holder = (ViewHolder) view.getTag();
-            ClassMessage classMessage = getItem(position);
+            ClassMessage classMessage = messagesStringArrayList.get(position);
 
             holder.message.setText(classMessage.getMessage());
             holder.time.setText(classMessage.getTime());
 
             return view;
         }
-    }
-
-
-    private class NotificationListAdapter extends ArrayAdapter<ClassMessage> {
-        LayoutInflater inflater;
-
-        public NotificationListAdapter(Context context, ArrayList<ClassMessage> messagesStringArrayList) {
-            super(context, 0, messagesStringArrayList);
-            inflater = (LayoutInflater) context.getSystemService(LAYOUT_INFLATER_SERVICE);
-        }
-
-        class ViewHolder {
-            final TextView time;
-            final TextView message;
-            final ImageView deleteButton;
-            final ImageView archiveButton;
-            final ImageView alertButton;
-
-            public ViewHolder(View view) {
-                message = (TextView) view.findViewById(R.id.message);
-                time = (TextView) view.findViewById(R.id.time);
-                deleteButton = (ImageView) view.findViewById(R.id.deleteButton);
-                archiveButton = (ImageView) view.findViewById(R.id.archiveButton);
-                alertButton = (ImageView) view.findViewById(R.id.alertButton);
-            }
-
-        }
-
-        @SuppressLint("InflateParams")
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            View view = convertView;
-            ViewHolder holder;
-
-            if (view == null) {
-                view = inflater.inflate(R.layout.list_item_class_notification, null, false);
-                holder = new ViewHolder(view);
-                view.setTag(holder);
-            }
-
-            holder = (ViewHolder) view.getTag();
-            ClassMessage classMessage = getItem(position);
-
-            holder.message.setText(classMessage.getMessage());
-            holder.time.setText(classMessage.getTime());
-
-
-            holder.deleteButton.setOnClickListener(onClickListener);
-            holder.archiveButton.setOnClickListener(onClickListener);
-            holder.alertButton.setOnClickListener(onClickListener);
-
-            holder.deleteButton.setTag(position);
-            holder.archiveButton.setTag(position);
-            holder.alertButton.setTag(position);
-
-            return view;
-        }
-
-
-        View.OnClickListener onClickListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Integer index = (Integer) view.getTag();
-                String notificationId = getItem(index).getId();
-
-                if (view.getId() == R.id.deleteButton) {
-                    deleteButton(notificationId);
-
-                } else if (view.getId() == R.id.archiveButton) {
-                    archiveButton(notificationId);
-
-                } else if (view.getId() == R.id.alertButton) {
-                    alertButton(notificationId);
-                }
-            }
-        };
-
-        private void deleteButton(final String notificationId) {
-            new AlertDialog.Builder(TeacherSendMessageToOneClass.this)
-                    .setMessage("Delete notification!")
-                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-
-
-                            final String url = AppConstants.URL_DELETE_NOTIFICATION;
-
-                            new AsyncTask<Void, Void, String>() {
-                                ProgressDialog progressDialog = new ProgressDialog(TeacherSendMessageToOneClass.this);
-
-                                @Override
-                                protected void onPreExecute() {
-                                    super.onPreExecute();
-                                    progressDialog.setMessage("Please wait...");
-                                    progressDialog.setCancelable(false);
-                                    progressDialog.show();
-                                }
-
-                                @Override
-                                protected String doInBackground(Void... params) {
-                                    String result = null;
-
-                                    HashMap<String, String> map = new HashMap<>();
-                                    map.put("notification_id", notificationId);
-
-                                    try {
-                                        result = new WebUtils().post(url, map);
-
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                    return result;
-                                }
-
-                                @Override
-                                protected void onPostExecute(String s) {
-                                    progressDialog.dismiss();
-                                    JSONObject jObject = null;
-                                    if (s == null) {
-                                        makeToast("Error in deleting!");
-
-                                    } else {
-                                        try {
-                                            jObject = new JSONObject(s);
-
-                                            // check if result contains Error
-                                            if (jObject.has("Error")) {
-                                                makeToast(jObject.getString("Error"));
-
-                                            } else if (jObject.has("Message")) {
-                                                makeToast("Deleted successfully!");
-                                                updateDataAsync();
-                                            }
-
-                                        } catch (JSONException e) {
-                                            e.printStackTrace();
-                                            Log.e(TAG, "Error in parsing data: " + s);
-                                            Log.e(TAG, e.getMessage());
-                                        }
-                                    }
-
-                                }
-                            }.execute();
-
-
-                        }
-                    })
-                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            dialogInterface.dismiss();
-                            dialogInterface.cancel();
-                        }
-                    })
-                    .create()
-                    .show();
-        }
-
-        private void archiveButton(String index) {
-
-        }
-
-        private void alertButton(String index) {
-
-        }
-
     }
 
 }

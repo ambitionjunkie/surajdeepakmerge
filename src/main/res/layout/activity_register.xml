@@ -46,19 +46,10 @@
                 android:orientation="vertical"
                 android:padding="10dp">
 
-                <ImageView
-                    android:id="@+id/edit_image"
-                    android:layout_width="150dp"
-                    android:layout_height="150dp"
-                    android:layout_gravity="center_horizontal"
-                    android:src="@drawable/ico_user"
-                    android:scaleType="centerCrop"/>
-
                 <EditText
                     android:id="@+id/nameEditText"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
-                    android:layout_marginTop="20dp"
                     android:background="#187ebe"
                     android:ems="30"
                     android:hint="@string/hint_name"

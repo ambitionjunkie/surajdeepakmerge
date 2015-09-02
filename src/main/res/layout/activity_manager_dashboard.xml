@@ -41,7 +41,7 @@
                 android:layout_toRightOf="@+id/addClassButton"
                 android:layout_toStartOf="@+id/navigationButton"
                 android:gravity="center"
-                android:text="Meeting Place"
+                android:text="Company"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:textColor="@color/white" />
         </RelativeLayout>
@@ -277,7 +277,7 @@
                                 android:layout_marginTop="10dp"
                                 android:gravity="center_horizontal"
                                 android:minHeight="40dp"
-                                android:text="Meeting Information"
+                                android:text="Class Information"
                                 android:textSize="15sp"
                                 tools:ignore="RtlSymmetry" />
                         </LinearLayout>
@@ -322,7 +322,7 @@
                                 android:layout_marginTop="10dp"
                                 android:gravity="center_horizontal"
                                 android:minHeight="40dp"
-                                android:text="Meeting Notifications"
+                                android:text="Class Notifications"
                                 android:textSize="15sp"
                                 tools:ignore="RtlSymmetry" />
 

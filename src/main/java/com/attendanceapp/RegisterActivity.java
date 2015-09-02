@@ -8,18 +8,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.MediaStore;
 import android.provider.Settings;
-import android.util.Base64;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -33,7 +26,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.attendanceapp.TwitterApp.TwDialogListener;
-import com.attendanceapp.models.CircleTransform;
 import com.attendanceapp.models.Register;
 import com.attendanceapp.models.User;
 import com.attendanceapp.utils.AndroidUtils;
@@ -55,14 +47,10 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.model.people.Person;
 import com.google.gson.Gson;
-import com.squareup.picasso.MemoryPolicy;
-import com.squareup.picasso.NetworkPolicy;
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -92,9 +80,6 @@ public class RegisterActivity extends Activity implements View.OnClickListener,
     private static final String twitter_secret_key = "aWwhKIctIUvqRw3WQJWibt4rWzZh6XFMcSYzvStTRMQoifNVVV";
     private static final String CALLBACK_URL = "twitterapp://connect";
 
-    //For image editing
-    ImageView edit_image;
-    SharedPreferences shared;
 
     /* for google login */
     private static final int RC_SIGN_IN = 778;
@@ -109,7 +94,7 @@ public class RegisterActivity extends Activity implements View.OnClickListener,
     Register register;
     User userToEdit;
     boolean isEdit;
-//text as comment
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Remove title bar
@@ -123,8 +108,6 @@ public class RegisterActivity extends Activity implements View.OnClickListener,
         setContentView(R.layout.activity_register);
 
         sharedPreferences = AndroidUtils.getCommonSharedPrefs(getApplicationContext());
-        shared=getSharedPreferences("myapp",Context.MODE_PRIVATE);
-
         register = new Register();
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -180,20 +163,15 @@ public class RegisterActivity extends Activity implements View.OnClickListener,
         securityQuestions = (Spinner) findViewById(R.id.securityQuestions);
         registerUserTypeLayout = (RelativeLayout) findViewById(R.id.registerUserTypeLayout);
         titleTextView = (TextView) findViewById(R.id.textView1);
-        edit_image = (ImageView) findViewById(R.id.edit_image);
 
         registerButton.setOnClickListener(this);
         facebookRegister.setOnClickListener(this);
         googlePlusRegister.setOnClickListener(this);
         twitterRegister.setOnClickListener(this);
-        edit_image.setOnClickListener(this);
 
         Intent intent = getIntent();
         userToEdit = (User) intent.getSerializableExtra(EXTRA_USER);
         isEdit = intent.getBooleanExtra(EXTRA_EDIT, false);
-        if (isEdit) {
-            getImage();
-        }
 
         ArrayAdapter<CharSequence> registerUserTypeAdapter = ArrayAdapter.createFromResource(this, R.array.register_user_type, R.layout.selector_item);
         registerUserTypeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -256,116 +234,9 @@ public class RegisterActivity extends Activity implements View.OnClickListener,
             case R.id.twitterLogin:
                 processLoginUsingTwitter();
                 break;
-            case R.id.edit_image:
-                PickAndUpload();
-                break;
         }
     }
-    AlertDialog photoDialog;
-    private static int GET_PICTURE = 1,CAMERA_REQUEST=101;
 
-    public void PickAndUpload() {
-        LayoutInflater factory = LayoutInflater.from(RegisterActivity.this);
-        final View imageDialogView = factory.inflate(
-                R.layout.dialog_layout, null);
-        photoDialog = new AlertDialog.Builder(RegisterActivity.this).create();
-        photoDialog.setView(imageDialogView);
-        Button button1=(Button) imageDialogView.findViewById(R.id.bt1);
-        Button button2=(Button) imageDialogView.findViewById(R.id.bt2);
-        RelativeLayout rel1=(RelativeLayout) imageDialogView.findViewById(R.id.rl1);
-        RelativeLayout rel2=(RelativeLayout) imageDialogView.findViewById(R.id.rl3);
-        button1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                photoDialog.dismiss();
-            }
-        });
-
-        button2.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                //your business logic
-                photoDialog.dismiss();
-            }
-        });
-        rel1.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                //your business logic
-                photoDialog.dismiss();
-                Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(cameraIntent, CAMERA_REQUEST);
-            }
-        });
-        rel2.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                //your business logic
-                photoDialog.dismiss();
-                Intent intent = new Intent(
-                        Intent.ACTION_PICK,
-                        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(intent, GET_PICTURE);
-            }
-        });
-        photoDialog.show();
-    }
-
-    static String selectedImagePath = "";
-    Bitmap bmp;
-
-    public static int calculateInSampleSize(BitmapFactory.Options options,
-                                            int reqWidth, int reqHeight) {
-        // Raw height and width of image
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        int inSampleSize = 1;
-
-        if (height > reqHeight || width > reqWidth) {
-
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
-
-            // Calculate the largest inSampleSize value that is a power of 2 and
-            // keeps both
-            // height and width larger than the requested height and width.
-            while ((halfHeight / inSampleSize) > reqHeight
-                    && (halfWidth / inSampleSize) > reqWidth) {
-                inSampleSize *= 2;
-            }
-        }
-
-        return inSampleSize;
-    }
-
-    private String getRealPathFromURI(Uri contentURI) {
-        String result;
-        Cursor cursor = getContentResolver().query(contentURI, null, null,
-                null, null);
-        if (cursor == null) {
-            result = contentURI.getPath();
-        } else {
-            cursor.moveToFirst();
-            int idx = cursor
-                    .getColumnIndex(MediaStore.Images.ImageColumns.DATA);
-
-            result = cursor.getString(idx);
-
-        }
-        cursor.close();
-        return result;
-    }
-    //function for getting profile pic
-    private void getImage(){
-        Map<String, String> keysValues = new HashMap<>();
-        if (isEdit) {
-            keysValues.put("user_id", userToEdit.getUserId());
-        }
-        getPicAsyncTask("http://www.abdevs.com/attendance/Mobiles/get_user_image", keysValues);
-    }
     private void registerButton() {
         String name = nameEditText.getText().toString().trim();
         String email = emailEditText.getText().toString().trim();
@@ -419,7 +290,6 @@ public class RegisterActivity extends Activity implements View.OnClickListener,
         keysValues.put("status", "1");
         keysValues.put("fullname", name);
         keysValues.put("deviceToken", android_id);
-        keysValues.put("profile_pic", shared.getString("imageUri",""));
 
         if (register.getFacebookId() != null && !register.getFacebookId().isEmpty()) {
             keysValues.put("facebook_id", register.getFacebookId());
@@ -433,60 +303,6 @@ public class RegisterActivity extends Activity implements View.OnClickListener,
 
 //        new RegisterAsync().execute(AppConstants.URL_REGISTER, keysValues);
         registerAsyncTask(AppConstants.URL_REGISTER, keysValues);
-    }
-    private void getPicAsyncTask(final String url, final Map<String, String> map) {
-
-        new AsyncTask<Void, Void, String>() {
-
-            private ProgressDialog progressDialog = new ProgressDialog(RegisterActivity.this);
-
-            @Override
-            protected void onPreExecute() {
-                progressDialog.setMessage("Getting profile details...");
-                progressDialog.setCancelable(false);
-                progressDialog.show();
-            }
-
-            @Override
-            protected String doInBackground(Void... params) {
-                try {
-                    return new WebUtils().post(url, map);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(String result) {
-                progressDialog.dismiss();
-
-                if (result == null) {
-                    makeToast("Error in connection");
-                } else {
-                    try {
-
-                        Log.e(TAG, result);
-
-                        JSONObject jsonObject = new JSONObject(result);
-
-                        if (jsonObject.has("Error")) {
-                            makeToast(jsonObject.getString("Error"));
-                        } else {
-
-                            String pic=jsonObject.getJSONObject("data").getString("full_image_url")+jsonObject.getJSONObject("data").getJSONObject("userdata").getString("profile_pic");
-                            Picasso.with(RegisterActivity.this).load(pic).transform(new CircleTransform()).memoryPolicy(MemoryPolicy.NO_CACHE).networkPolicy(NetworkPolicy.NO_CACHE).placeholder(R.drawable.ico_user).error(R.drawable.ico_user).into(edit_image);
-                            System.out.println("User image is following"+pic);
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                        Log.e(TAG, e.toString());
-                    }
-                }
-            }
-
-        }.execute();
-
     }
 
 
@@ -674,48 +490,6 @@ public class RegisterActivity extends Activity implements View.OnClickListener,
 
 //        for facebook login
         callbackManager.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
-            if (requestCode == GET_PICTURE) {
-
-                if (bmp != null) {
-                    bmp.recycle();
-
-                }
-
-                Uri selectedImageUri = data.getData();
-                selectedImagePath = getRealPathFromURI(selectedImageUri);
-                BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inJustDecodeBounds = true;
-                BitmapFactory.decodeFile(selectedImagePath, options);
-                options.inSampleSize = calculateInSampleSize(options, 300, 300);
-                options.inJustDecodeBounds = false;
-                bmp = BitmapFactory.decodeFile(selectedImagePath, options);
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                final byte[] data1 = stream.toByteArray();
-                System.out.println("Data is" + data1.length);
-                Picasso.with(RegisterActivity.this).load(selectedImageUri.toString()).memoryPolicy(MemoryPolicy.NO_CACHE).networkPolicy(NetworkPolicy.NO_CACHE).transform(new CircleTransform()).into(edit_image);
-
-
-                String temp= Base64.encodeToString(data1, Base64.DEFAULT);
-                // System.out.println("string is: "+temp+".......");
-                shared.edit().putString("imageUri",temp).commit();
-
-            }
-            else if(requestCode==CAMERA_REQUEST){
-
-                Bitmap photo = (Bitmap) data.getExtras().get("data");
-                ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-                photo.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-                final byte[] data2 = bytes.toByteArray();
-                String temp1= Base64.encodeToString(data2, Base64.DEFAULT);
-                String path = MediaStore.Images.Media.insertImage(RegisterActivity.this.getContentResolver(), photo, "Title", null);
-                Uri imageContent = Uri.parse(path);
-                Picasso.with(RegisterActivity.this).load(imageContent).fit().memoryPolicy(MemoryPolicy.NO_CACHE).networkPolicy(NetworkPolicy.NO_CACHE).transform(new CircleTransform()).into(edit_image);
-                shared.edit().putString("imageUri",temp1).commit();
-
-            }
-        }
     }
 
     private void getFacebookData(AccessToken accessToken) {
