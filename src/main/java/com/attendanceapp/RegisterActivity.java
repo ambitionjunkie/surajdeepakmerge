@@ -109,7 +109,7 @@ public class RegisterActivity extends Activity implements View.OnClickListener,
     Register register;
     User userToEdit;
     boolean isEdit;
-
+//text as comment
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Remove title bar
