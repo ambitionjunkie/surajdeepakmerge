@@ -104,11 +104,11 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
         /* for setting tab */
         settingPage = (LinearLayout) findViewById(R.id.settingPage);
         settingButton = (ImageView) findViewById(R.id.settingButton);
-        classInformationLayout = (LinearLayout) findViewById(R.id.classInformationLayout);
+        //classInformationLayout = (LinearLayout) findViewById(R.id.classInformationLayout);
         absenceLayout = (LinearLayout) findViewById(R.id.absenceLayout);
         reportsLayout = (LinearLayout) findViewById(R.id.reportsLayout);
         onOffNotifications = (LinearLayout) findViewById(R.id.onOffNotifications);
-        classNotificationLayout = (RelativeLayout) findViewById(R.id.classNotificationLayout);
+        //classNotificationLayout = (RelativeLayout) findViewById(R.id.classNotificationLayout);
         onOffNotificationImageView = (ImageView) findViewById(R.id.onOffNotificationImageView);
 
         addEventButton.setOnClickListener(this);
@@ -118,18 +118,18 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
         studentsBtn.setOnClickListener(this);
         sendClassNotificationBtn.setOnClickListener(this);
 
-        classInformationLayout.setOnClickListener(this);
+        //classInformationLayout.setOnClickListener(this);
         absenceLayout.setOnClickListener(this);
         reportsLayout.setOnClickListener(this);
         onOffNotifications.setOnClickListener(this);
-        classNotificationLayout.setOnClickListener(this);
+        //classNotificationLayout.setOnClickListener(this);
 
         oneWordTitleLayout.setOnTouchListener(swipeTouchListener);
-        classInformationLayout.setOnTouchListener(swipeTouchListener);
+        //classInformationLayout.setOnTouchListener(swipeTouchListener);
         absenceLayout.setOnTouchListener(swipeTouchListener);
         reportsLayout.setOnTouchListener(swipeTouchListener);
         onOffNotifications.setOnTouchListener(swipeTouchListener);
-        classNotificationLayout.setOnTouchListener(swipeTouchListener);
+        //classNotificationLayout.setOnTouchListener(swipeTouchListener);
 
         settingButton.setOnTouchListener(swipeTouchListener);
         mainPage.setOnTouchListener(swipeTouchListener);
