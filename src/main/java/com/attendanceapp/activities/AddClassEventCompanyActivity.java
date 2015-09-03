@@ -120,7 +120,7 @@ public class AddClassEventCompanyActivity extends Activity {
                 @Override
                 public void onClick(View v) {
                     new AlertDialog.Builder(AddClassEventCompanyActivity.this)
-                            .setTitle("Want to delete").setMessage("Press ok if you want to delete class")
+                            .setMessage("Press Ok to delete!")
                             .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
@@ -209,10 +209,10 @@ public class AddClassEventCompanyActivity extends Activity {
                 urlToSendData = AppConstants.URL_ADD_EVENT_BY_ATTENDEE;
 
             } else if (userRole == UserRole.Employee) {
-                txtTitle = "Company setup";
-                title = "Company name";
-                code = "Company code";
-                add = "Add another company";
+                txtTitle = "Meeting Place";
+                title = "Meeting Place";
+                code = "Meeting code";
+                add = "Add another meeting";
                 urlToSendData = AppConstants.URL_ADD_COMPANY_BY_EMPLOYEE;
 
             }
@@ -252,10 +252,10 @@ public class AddClassEventCompanyActivity extends Activity {
 
                         } else {
                             if (isEditClass) {
-                                makeToast("Class is deleted!");
+                                makeToast("Deleted successfully!");
                                 isClassDeleted = true;
                             } else {
-                                makeToast("Class is saved!");
+                                makeToast("Saved successfully!");
                                 isClassAdded = true;
                             }
                             onBackPressed();
@@ -334,10 +334,12 @@ public class AddClassEventCompanyActivity extends Activity {
 
                     }
                 }
-                startActivity(new Intent(AddClassEventCompanyActivity.this, StudentDashboardActivity.class));
+                startActivity(new Intent(AddClassEventCompanyActivity.this, Employee_DashboardActivity.class));
                 finish();
             }
         }.execute();
 
     }
+
+
 }

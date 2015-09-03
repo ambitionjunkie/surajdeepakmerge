@@ -233,12 +233,6 @@
             android:name=".activities.EventHost_DashboardActivity"
             android:windowSoftInputMode="stateHidden|adjustPan" />
         <activity
-            android:name=".activities.Attendee_DashboardActivity"
-            android:windowSoftInputMode="stateHidden|adjustPan" />
-        <activity
-            android:name=".activities.Attendee_AddEventActivity"
-            android:windowSoftInputMode="stateHidden|adjustPan" />
-        <activity
             android:name=".activities.CreateClassEventCompanyActivity"
             android:windowSoftInputMode="stateHidden|adjustPan" />
         <activity

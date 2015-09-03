@@ -3,6 +3,7 @@ package com.attendanceapp;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -30,6 +31,7 @@ import com.attendanceapp.models.User;
 import com.attendanceapp.models.UserRole;
 import com.attendanceapp.utils.AndroidUtils;
 import com.attendanceapp.utils.DataUtils;
+import com.attendanceapp.utils.GPSTracker;
 import com.attendanceapp.utils.NavigationPage;
 import com.attendanceapp.utils.StringUtils;
 import com.attendanceapp.utils.UserUtils;
@@ -47,7 +49,7 @@ public class TeacherDashboardActivity extends FragmentActivity implements View.O
     private static final String TAG = TeacherDashboardActivity.class.getSimpleName();
     private static final int REQUEST_EDIT_ACCOUNT = 100;
 
-
+    GPSTracker gpsTracker;
     protected ImageView addClassButton;
     private TextView oneWordTextView;
     protected LinearLayout takeAttendanceBtn, takeAttendanceCurrentLocationBtn, studentsBtn, sendClassNotificationBtn, mainPage;
@@ -154,6 +156,7 @@ public class TeacherDashboardActivity extends FragmentActivity implements View.O
                 setOneWordTextView(position);
             }
         });
+        gpsTracker = new GPSTracker(getApplicationContext());
     }
 
     private void setOneWordTextView(int current) {
@@ -256,7 +259,9 @@ public class TeacherDashboardActivity extends FragmentActivity implements View.O
 
             @Override
             protected void onPostExecute(String result) {
-                dialog.dismiss();
+                if(dialog!=null) {
+                    dialog.dismiss();
+                }
                 if (result != null) {
                     try {
                         JSONObject object = new JSONObject(result);
@@ -541,6 +546,21 @@ public class TeacherDashboardActivity extends FragmentActivity implements View.O
                     hm.put("type", "ByBeacon");
                 } else if ("gps".equalsIgnoreCase(attendanceUsing)) {
                     hm.put("type", "Automatic");
+                    if (gpsTracker.canGetLocation()) {
+                        Location location = gpsTracker.getLocation();
+
+                        if (location != null) {
+                            final double latitude = location.getLatitude();
+                            final double longitude = location.getLongitude();
+
+                            hm.put("teach_lat",String.valueOf(latitude));
+                            hm.put("teach_long", String.valueOf(longitude));
+
+                        }
+                    }
+                    else{
+                        gpsTracker.showSettingsAlert();
+                    }
                 }
 
                 try {
@@ -578,7 +598,9 @@ public class TeacherDashboardActivity extends FragmentActivity implements View.O
 
                             @Override
                             protected void onPostExecute(String result) {
-                                dialog.dismiss();
+                                if(dialog!=null) {
+                                    dialog.dismiss();
+                                }
                                 if (result != null) {
                                     Intent intent = new Intent(TeacherDashboardActivity.this, TeacherTakeAttendanceCurrentLocationActivity.class);
                                     intent.putExtra(TeacherTakeAttendanceCurrentLocationActivity.EXTRA_ATTENDANCE_DATA, result);
@@ -590,7 +612,9 @@ public class TeacherDashboardActivity extends FragmentActivity implements View.O
                         }.execute();
 
                     } else {
-                        dialog.dismiss();
+                        if(dialog!=null) {
+                            dialog.dismiss();
+                        }
                         Intent intent;
 //                        if ("beacons".equalsIgnoreCase(attendanceUsing)) {
 //                            intent = new Intent(TeacherDashboardActivity.this, TeacherTakeAttendanceActivity.class);
@@ -604,7 +628,9 @@ public class TeacherDashboardActivity extends FragmentActivity implements View.O
                         startActivity(intent);
                     }
                 } else {
-                    dialog.dismiss();
+                    if(dialog!=null) {
+                        dialog.dismiss();
+                    }
                     makeToast("Please check internet connection");
                 }
             }

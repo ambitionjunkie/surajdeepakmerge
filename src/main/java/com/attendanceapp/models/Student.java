@@ -6,7 +6,7 @@ import java.util.List;
 
 public class Student extends User implements Serializable {
 
-    private String childIdForLocation, studentClassId, modifiedDate, classCode;
+    private String childIdForLocation, allClassesId, studentClassId, modifiedDate, classCode;
 
     private List<StudentClass> studentClassList = new ArrayList<>();
 
@@ -56,6 +56,14 @@ public class Student extends User implements Serializable {
 
     public void setClassCode(String classCode) {
         this.classCode = classCode;
+    }
+
+    public String getAllClassesId() {
+        return allClassesId;
+    }
+
+    public void setAllClassesId(String allClassesId) {
+        this.allClassesId = allClassesId;
     }
 }
 

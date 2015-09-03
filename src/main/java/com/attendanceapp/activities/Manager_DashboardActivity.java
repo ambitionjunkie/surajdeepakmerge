@@ -24,7 +24,6 @@ import com.attendanceapp.Absent;
 import com.attendanceapp.AppConstants;
 import com.attendanceapp.OnSwipeTouchListener;
 import com.attendanceapp.R;
-import com.attendanceapp.TeacherAddClassActivity;
 import com.attendanceapp.TeacherSendMessageToOneClass;
 import com.attendanceapp.adapters.BaseViewPagerAdapter;
 import com.attendanceapp.models.ClassEventCompany;
@@ -47,11 +46,13 @@ import java.util.List;
 public class Manager_DashboardActivity extends FragmentActivity implements View.OnClickListener, NavigationPage.NavigationFunctions {
 
     private static final String TAG = EventHost_DashboardActivity.class.getSimpleName();
-    private static final int REQUEST_EDIT_ACCOUNT = 100;
+    private static final int REQUEST_EDIT_CLASS_EVENT_COMPANY = 101;
 
 
     protected ImageView addClassButton;
     private TextView oneWordTextView;
+
+    /* main page functionality */
     protected LinearLayout takeAttendanceBtn, takeAttendanceCurrentLocationBtn, studentsBtn, sendClassNotificationBtn, mainPage;
 
     /* for settings page functionality */
@@ -73,9 +74,9 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_EDIT_ACCOUNT) {
+        if (requestCode == REQUEST_EDIT_CLASS_EVENT_COMPANY) {
             if (resultCode == RESULT_OK) {
-                updateDataAsync();
+                updateDataAsync(true);
             }
         }
     }
@@ -158,6 +159,7 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
     }
 
     private void setOneWordTextView(int current) {
+        oneWordTextView.setText("");
         if (user.getClassEventCompanyArrayList().size() > current) {
             oneWordTextView.setText(String.valueOf(user.getClassEventCompanyArrayList().get(current).getName().charAt(0)).toUpperCase());
         }
@@ -225,7 +227,7 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
     private void absenceLayout() {
 
         if (!haveStudentsInClass()) {
-            makeToast("Please add students!");
+            makeToast("Please add employees!");
             return;
         }
 
@@ -288,7 +290,7 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
     private void reportsLayout() {
 
         if (!haveStudentsInClass()) {
-            makeToast("Please add students!");
+            makeToast("Please add employees!");
             return;
         }
 
@@ -322,7 +324,7 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
 
     private void classNotificationLayout() {
         if (!haveStudentsInClass()) {
-            makeToast("Please add students!");
+            makeToast("Please add employees!");
             return;
         }
         Intent intent = new Intent(Manager_DashboardActivity.this, TeacherSendMessageToOneClass.class);
@@ -332,14 +334,17 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
     }
 
     private void classInformationLayout() {
-        Intent intent = new Intent(Manager_DashboardActivity.this, TeacherAddClassActivity.class);
-        intent.putExtra(TeacherAddClassActivity.EXTRA_TEACHER_CLASS_INDEX, mViewPager.getCurrentItem());
-        startActivity(intent);
+        Bundle bundle = new Bundle();
+        bundle.putInt(AppConstants.EXTRA_USER_ROLE, UserRole.Manager.getRole());
+        bundle.putInt(AppConstants.EXTRA_SELECTED_INDEX, mViewPager.getCurrentItem());
+        Intent intent = new Intent(this, CreateClassEventCompanyActivity.class);
+        intent.putExtras(bundle);
+        startActivityForResult(intent, REQUEST_EDIT_CLASS_EVENT_COMPANY);
     }
 
     private void sendClassNotificationBtn() {
         if (!haveStudentsInClass()) {
-            makeToast("Please add students!");
+            makeToast("Please add employees!");
             return;
         }
         Intent intent = new Intent(Manager_DashboardActivity.this, UserSendMessageToOneClass.class);
@@ -437,12 +442,21 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
         }
 
         new NavigationPage(this, userUtils.getUserFromSharedPrefs());
-        updateDataAsync();
+        updateDataAsync(false);
     }
 
-    private void updateDataAsync() {
+    private void updateDataAsync(final boolean deleteLastData) {
         new AsyncTask<Void, Void, String>() {
+            private ProgressDialog progressDialog = new ProgressDialog(Manager_DashboardActivity.this);
 
+            @Override
+            protected void onPreExecute() {
+                if (deleteLastData) {
+                    progressDialog.setMessage("Please wait...");
+                    progressDialog.setCancelable(false);
+                    progressDialog.show();
+                }
+            }
             @Override
             protected String doInBackground(Void... params) {
                 HashMap<String, String> hm = new HashMap<>();
@@ -458,11 +472,15 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
 
             @Override
             protected void onPostExecute(String result) {
+                if (deleteLastData) {
+                    progressDialog.dismiss();
+                    progressDialog.cancel();
+                }
                 if (result != null) {
 
                     List<ClassEventCompany> newList = DataUtils.getClassEventCompanyArrayListFromJsonString(result);
 
-                    if (user.getClassEventCompanyArrayList().size() != newList.size()) {
+                    if (deleteLastData || (user.getClassEventCompanyArrayList().size() != newList.size())) {
 
                         user.getClassEventCompanyArrayList().clear();
                         user.getClassEventCompanyArrayList().addAll(newList);
@@ -484,7 +502,7 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
         final List<User> studentList = classEventCompany.getUsers();
 
         if (studentList.size() < 1) {
-            makeToast("Please add students to take attendance");
+            makeToast("Please add employees to take attendance");
             return;
         }
 
@@ -526,13 +544,15 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
 
             @Override
             protected void onPostExecute(String result) {
+                dialog.dismiss();
+                dialog.cancel();
+
                 if (result != null) {
 
                     if (result.contains("Error") || result.contains("error")) {
                         makeToast("Error in getting attendance!");
 
                     } else {
-                        dialog.dismiss();
                         Intent intent;
                         intent = new Intent(Manager_DashboardActivity.this, CommonAttendanceTakenActivity.class);
                         intent.putExtra(CommonAttendanceTakenActivity.EXTRA_SELECTED_CLASS_INDEX, mViewPager.getCurrentItem());
@@ -542,7 +562,6 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
                         startActivity(intent);
                     }
                 } else {
-                    dialog.dismiss();
                     makeToast("Please check internet connection");
                 }
             }

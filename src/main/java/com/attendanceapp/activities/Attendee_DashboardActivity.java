@@ -2,6 +2,7 @@ package com.attendanceapp.activities;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -12,134 +13,151 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.ExpandableListView;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.attendanceapp.AppConstants;
+import com.attendanceapp.Contact_us;
+import com.attendanceapp.Faq;
 import com.attendanceapp.OnSwipeTouchListener;
 import com.attendanceapp.R;
-import com.attendanceapp.activities.Attendee_AddEventActivity;
-import com.attendanceapp.activities.MapActivity;
-import com.attendanceapp.adapters.ParentPagerAdapter;
-import com.attendanceapp.adapters.Parent_ChildClassExpendableListAdapter;
-import com.attendanceapp.models.Attendance;
-import com.attendanceapp.models.Attendee;
+import com.attendanceapp.TeacherSendMessageToOneClass;
+import com.attendanceapp.TeacherShowClassStudentsActivity;
+import com.attendanceapp.TeacherTakeAttendanceActivity;
+import com.attendanceapp.TeacherTakeAttendanceCurrentLocationActivity;
+import com.attendanceapp.adapters.EventHostPagerAdapter;
 import com.attendanceapp.models.Event;
-import com.attendanceapp.models.Parent;
-import com.attendanceapp.models.Student;
+import com.attendanceapp.models.Eventee;
 import com.attendanceapp.models.User;
-import com.attendanceapp.models.UserRole;
-import com.attendanceapp.utils.DataUtils;
-import com.attendanceapp.utils.NavigationPage;
+import com.attendanceapp.utils.AndroidUtils;
+import com.attendanceapp.utils.StringUtils;
 import com.attendanceapp.utils.UserUtils;
 import com.attendanceapp.utils.WebUtils;
-import com.estimote.sdk.repackaged.gson_v2_3_1.com.google.gson.Gson;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.TreeMap;
 
-public class Attendee_DashboardActivity extends FragmentActivity implements View.OnClickListener, NavigationPage.NavigationFunctions {
+public class Attendee_DashboardActivity extends FragmentActivity implements View.OnClickListener {
 
     private static final String TAG = Attendee_DashboardActivity.class.getSimpleName();
-    private static final int REQUEST_EDIT_CHILD = 100;
-
-    protected ImageView addEventLayout;
-    protected static TextView listEmptyTextView, oneWordTextView;
-    ProgressBar absentListProgress;
-    protected LinearLayout  mainPage, absentLinearLayout;
-    ExpandableListView absentListView;
-    ViewPager mViewPager;
-    private FrameLayout navigationLayout;
-
+    protected ImageView addClassButton, navigationButton, settingButton;
+    protected TextView oneWordTextView, faqButton, contactUsButton, currentViewType, editAccountButton, addViewButton, storeButton, logoutButton, notificationStatus;
+    protected LinearLayout takeAttendanceBtn, takeAttendanceCurrentLocationBtn, studentsBtn, notificationsButton, sendClassNotificationBtn, mainPage, settingPage;
     Animation textAnimation;
-    ParentPagerAdapter parentPagerAdapter;
+    protected FrameLayout navigationLayout;
+    ScrollView swipePage;
+    EventHostPagerAdapter eventHostPagerAdapter;
+    ViewPager mViewPager;
+    protected SharedPreferences sharedPreferences;
+    FrameLayout navigationSwipe;
 
-    private Attendee attendee;
-    private TreeMap<String, List<Attendance>> classAttendanceMap = new TreeMap<>();
-    private Parent_ChildClassExpendableListAdapter listAdapter;
-
-    UserUtils userUtils;
-    Gson gson = new Gson();
+    private UserUtils userUtils;
+    Eventee eventHost;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Remove title bar
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_attendee_dashboard);
-
-        navigationLayout = (FrameLayout) findViewById(R.id.navigation);
+        setContentView(R.layout.activity_teacher_dashboard);
 
         mViewPager = (ViewPager) findViewById(R.id.pager);
+        swipePage = (ScrollView) findViewById(R.id.swipePage);
+        addClassButton = (ImageView) findViewById(R.id.addClassButton);
+        navigationButton = (ImageView) findViewById(R.id.navigationButton);
+        settingButton = (ImageView) findViewById(R.id.settingButton);
         oneWordTextView = (TextView) findViewById(R.id.oneWordTitle);
-        listEmptyTextView = (TextView) findViewById(R.id.listEmptyTextView);
-        addEventLayout = (ImageView) findViewById(R.id.addEventLayout);
-        mainPage = (LinearLayout) findViewById(R.id.mainPage);
-        absentLinearLayout = (LinearLayout) findViewById(R.id.absentLinearLayout);
-        absentListProgress = (ProgressBar) findViewById(R.id.absentListProgress);
-        absentListView = (ExpandableListView) findViewById(R.id.absentListView);
+        notificationStatus = (TextView) findViewById(R.id.notificationStatus);
 
+        navigationLayout = (FrameLayout) findViewById(R.id.navigation);
+        faqButton = (TextView) findViewById(R.id.faqButton);
+        contactUsButton = (TextView) findViewById(R.id.contactUsButton);
+        currentViewType = (TextView) findViewById(R.id.currentViewType);
+        editAccountButton = (TextView) findViewById(R.id.editAccountButton);
+        addViewButton = (TextView) findViewById(R.id.addViewButton);
+        notificationsButton = (LinearLayout) findViewById(R.id.notificationsButton);
+        storeButton = (TextView) findViewById(R.id.storeButton);
+        logoutButton = (TextView) findViewById(R.id.logoutButton);
+        navigationSwipe = (FrameLayout) findViewById(R.id.navigationSwipe);
+
+        takeAttendanceBtn = (LinearLayout) findViewById(R.id.takeAttendanceBtn);
+        takeAttendanceCurrentLocationBtn = (LinearLayout) findViewById(R.id.takeAttendanceCurrentLocationBtn);
+        studentsBtn = (LinearLayout) findViewById(R.id.studentsBtn);
+        sendClassNotificationBtn = (LinearLayout) findViewById(R.id.sendClassNotificationBtn);
+        mainPage = (LinearLayout) findViewById(R.id.mainPage);
+        settingPage = (LinearLayout) findViewById(R.id.settingPage);
+
+        sharedPreferences = AndroidUtils.getCommonSharedPrefs(getApplicationContext());
         userUtils = new UserUtils(Attendee_DashboardActivity.this);
         User user = userUtils.getUserFromSharedPrefs();
-        attendee = new Attendee(user);
+        eventHost = new Eventee(user);
 
-        addEventLayout.setOnClickListener(this);
+        setAdapter();
 
-        absentListView.setOnTouchListener(swipeTouchListener);
-        absentLinearLayout.setOnTouchListener(swipeTouchListener);
-        mainPage.setOnTouchListener(swipeTouchListener);
-/*
-        setParentPagerAdapter();
-        setOneWordTextView(0);
+        addClassButton.setOnClickListener(this);
+        navigationButton.setOnClickListener(this);
+        settingButton.setOnClickListener(this);
+        faqButton.setOnClickListener(this);
+        contactUsButton.setOnClickListener(this);
+        currentViewType.setOnClickListener(this);
+        editAccountButton.setOnClickListener(this);
+        addViewButton.setOnClickListener(this);
+        notificationsButton.setOnClickListener(this);
+        storeButton.setOnClickListener(this);
+        logoutButton.setOnClickListener(this);
+        takeAttendanceBtn.setOnClickListener(this);
+        takeAttendanceCurrentLocationBtn.setOnClickListener(this);
+        studentsBtn.setOnClickListener(this);
+        sendClassNotificationBtn.setOnClickListener(this);
+        navigationSwipe.setOnClickListener(this);
 
-        listAdapter = new Parent_ChildClassExpendableListAdapter(Attendee_DashboardActivity.this, classAttendanceMap);
-        absentListView.setAdapter(listAdapter);
+        swipePage.setOnTouchListener(swipeTouchListener);
+        takeAttendanceBtn.setOnTouchListener(swipeTouchListener);
+        takeAttendanceCurrentLocationBtn.setOnTouchListener(swipeTouchListener);
+        studentsBtn.setOnTouchListener(swipeTouchListener);
+        sendClassNotificationBtn.setOnTouchListener(swipeTouchListener);
 
-        if (parent.getStudentList().size() >= 1) {
-            showAbsentList(parent.getStudentList().get(0));
-        }
-
-
-        mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+        navigationSwipe.setOnTouchListener(new OnSwipeTouchListener() {
             @Override
-            public void onPageSelected(int position) {
-                setOneWordTextView(position);
+            public boolean onSwipeLeft() {
+                if (navigationLayout.getVisibility() == View.VISIBLE) {
+                    return false;
+                }
+                toggleNavigation();
+                return true;
             }
         });
-*/
-    }
 
-    private void setOneWordTextView(int current) {
-        oneWordTextView.setText("");
-        if (attendee.getEventList().size() > current) {
-//            oneWordTextView.setText(String.valueOf(attendee.getEventList().get(current).getUsername().charAt(0)).toUpperCase());
-            showAbsentList(attendee.getEventList().get(current));
-        }
         showMessageIfNoClass();
+        setOneWordTextView();
+        notificationStatus.setText(sharedPreferences.getBoolean(AppConstants.IS_NOTIFICATIONS_ON, true) ? "On" : "Off");
+
     }
 
-    private void setParentPagerAdapter() {
-//        parentPagerAdapter = new ParentPagerAdapter(getSupportFragmentManager(), attendee.getEventList());
-        mViewPager.setAdapter(parentPagerAdapter);
+
+    private void setOneWordTextView() {
+        if (eventHost.getEventList().size() > 0) {
+            oneWordTextView.setText(String.valueOf(eventHost.getEventList().get(0).getName().charAt(0)).toUpperCase());
+        }
     }
+
+
+    private void setAdapter() {
+        eventHostPagerAdapter = new EventHostPagerAdapter(getSupportFragmentManager(), eventHost.getEventList());
+        mViewPager.setAdapter(eventHostPagerAdapter);
+
+    }
+
 
     private void showMessageIfNoClass() {
-        absentLinearLayout.setVisibility(attendee.getEventList().size() == 0 ? View.GONE : View.VISIBLE);
-        listEmptyTextView.setVisibility(attendee.getEventList().size() == 0 ? View.VISIBLE : View.GONE);
-
+        swipePage.setVisibility(eventHost.getEventList().size() == 0 ? View.GONE : View.VISIBLE);
     }
+
 
     OnSwipeTouchListener swipeTouchListener = new OnSwipeTouchListener() {
         public boolean onSwipeRight() {
@@ -156,110 +174,311 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
 
         void changeTitle() {
             int current = mViewPager.getCurrentItem();
-            //oneWordTextView.setText(String.valueOf(attendee.getEventList().get(current).getUsername().charAt(0)).toUpperCase());
-            showAbsentList(attendee.getEventList().get(current));
+            oneWordTextView.setText(String.valueOf(eventHost.getEventList().get(current).getName().charAt(0)).toUpperCase());
         }
     };
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Parent parent1 = userUtils.getUserWithDataFromSharedPrefs(Parent.class);
-
-        if (parent1 != null) {
-            List<Event> teacherClasses = attendee.getEventList();
-            List<Student> teacher1Classes = parent1.getStudentList();
-
-            if (teacherClasses != null && teacher1Classes != null && teacherClasses.size() != teacher1Classes.size()) {
-                attendee.getEventList().clear();
-                //attendee.getStudentList().addAll(parent1.getStudentList());
-                parentPagerAdapter.notifyDataSetChanged();
-                setOneWordTextView(0);
-            }
-
-        }
-
-        new NavigationPage(this, userUtils.getUserFromSharedPrefs());
-        updateDataAsync();
-    }
-
-    private void showAbsentList(final Event ev) {
-        new AsyncTask<Void, Void, String>() {
-            @Override
-            protected void onPreExecute() {
-                absentListProgress.setVisibility(View.VISIBLE);
-                absentListView.setVisibility(View.GONE);
-            }
-
-            @Override
-            protected String doInBackground(Void... params) {
-                HashMap<String, String> map = new HashMap<>();
-//                map.put("student_id", ev.getChildIdForLocation());
-                try {
-                    return new WebUtils().post(AppConstants.URL_PARENT_CHECK_CHILD_ATTENDANCE, map);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(String result) {
-                absentListProgress.setVisibility(View.GONE);
-                absentListView.setVisibility(View.VISIBLE);
-
-                if (result != null) {
-                    try {
-                        JSONObject jsonObject = new JSONObject(result);
-                        if (jsonObject.has("Error")) {
-                            makeToast(jsonObject.getString("Error"));
-                            return;
-                        }
-                        classAttendanceMap = DataUtils.getClassAttendanceMap(result);
-                        updateList();
-
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                        Log.e(TAG, e.toString());
-                    }
-                }
-            }
-        }.execute();
-    }
-
-    private void updateList() {
-        listAdapter.update(classAttendanceMap);
-    }
 
     @Override
     public void onClick(View v) {
 
         switch (v.getId()) {
-            case R.id.addEventLayout:
-                addEventLayout();
+            case R.id.addClassButton:
+                Intent intent = new Intent(Attendee_DashboardActivity.this, EventHost_AddEventActivity.class);
+//                intent.putExtra(EventHost_AddEventActivity.TEACHER_DATA, user);
+                startActivity(intent);
+                // finish();
+                break;
+            case R.id.settingButton:
+                settingButton();
+                break;
+            case R.id.navigationButton:
+                toggleNavigation();
+                break;
+            case R.id.faqButton:
+                openActivity(Faq.class, false);
+                break;
+            case R.id.contactUsButton:
+                openActivity(Contact_us.class, false);
+                break;
+            case R.id.editAccountButton:
+                break;
+            case R.id.addViewButton:
+                break;
+            case R.id.notificationsButton:
+                toggleNotification();
+                break;
+            case R.id.storeButton:
+                break;
+            case R.id.logoutButton:
+                userUtils.userLogout();
+                break;
+            case R.id.takeAttendanceBtn:
+                takeAttendanceBtn();
+                break;
+            case R.id.takeAttendanceCurrentLocationBtn:
+                takeAttendanceCurrentLocationBtn();
+                break;
+            case R.id.studentsBtn:
+                studentsBtn();
+                break;
+            case R.id.sendClassNotificationBtn:
+                sendClassNotificationBtn();
                 break;
         }
     }
 
-    private void editChildLayout() {
-        Intent intent = new Intent(Attendee_DashboardActivity.this, Attendee_AddEventActivity.class);
-/*        intent.putExtra(Attendee_AddEventActivity.EXTRA_PARENT, parent);
-        intent.putExtra(Attendee_AddEventActivity.EXTRA_IS_EDIT_STUDENT, true);
-        intent.putExtra(Attendee_AddEventActivity.EXTRA_STUDENT_NAME, parent.getStudentList().get(mViewPager.getCurrentItem()).getUsername());
-        intent.putExtra(Attendee_AddEventActivity.EXTRA_STUDENT_ID, parent.getStudentList().get(mViewPager.getCurrentItem()).getUserId());*/
 
-        startActivityForResult(intent, REQUEST_EDIT_CHILD);
+    private void toggleNotification() {
+        notificationStatus.setText(userUtils.toggleNotification() ? "On" : "Off");
     }
 
-    private void addEventLayout() {
-        Intent intent = new Intent(Attendee_DashboardActivity.this, Attendee_AddEventActivity.class);
-        //intent.putExtra(Attendee_AddEventActivity.EXTRA_PARENT, parent);
+
+    private void takeAttendanceBtn() {
+        final List<Eventee> studentList = eventHost.getEventList().get(mViewPager.getCurrentItem()).getEventeeList();
+        if (studentList.size() < 1) {
+            makeToast("Please add Eventee to take attendance");
+            return;
+        }
+
+        new AsyncTask<Void, Void, String>() {
+            private ProgressDialog dialog = new ProgressDialog(Attendee_DashboardActivity.this);
+            Event event;
+
+            @Override
+            protected void onPreExecute() {
+                event = eventHost.getEventList().get(mViewPager.getCurrentItem());
+
+                dialog.setMessage("Please wait...");
+                dialog.setCancelable(false);
+                dialog.show();
+            }
+
+            @Override
+            protected String doInBackground(Void... params) {
+                String result = null;
+
+                HashMap<String, String> hm = new HashMap<>();
+                // user_id, student_id ( more than one comma separated ), class_code
+                hm.put("user_id", eventHost.getUserId());
+                hm.put("class_code", event.getUniqueCode());
+                hm.put("class_id", event.getId());
+                hm.put("type", "ByBeacon");
+                hm.put("student_id", StringUtils.getAllIdsFromStudentList(event.getEventeeList(), ','));
+
+                try {
+                    result = new WebUtils().post(AppConstants.URL_TAKE_ATTENDANCE_CURRENT_LOCATION, hm);
+                } catch (IOException e) {
+                    Log.e(TAG, e.getLocalizedMessage());
+                    e.printStackTrace();
+                }
+
+                return result;
+            }
+
+            @Override
+            protected void onPostExecute(String result) {
+                if (result != null) {
+
+                    if (result.contains("Error")) {
+                        new AsyncTask<Void, Void, String>() {
+                            @Override
+                            protected String doInBackground(Void... params) {
+                                String result = null;
+                                HashMap<String, String> hm = new HashMap<>();
+                                hm.put("user_id", eventHost.getUserId());
+                                hm.put("class_id", event.getId());
+
+                                try {
+                                    result = new WebUtils().post(AppConstants.URL_SHOW_ATTENDANCE_CURRENT_LOCATION, hm);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+                                return result;
+                            }
+
+                            @Override
+                            protected void onPostExecute(String result) {
+                                dialog.dismiss();
+                                if (result != null) {
+                                    Intent intent = new Intent(Attendee_DashboardActivity.this, TeacherTakeAttendanceCurrentLocationActivity.class);
+                                    intent.putExtra(TeacherTakeAttendanceCurrentLocationActivity.EXTRA_ATTENDANCE_DATA, result);
+                                    startActivity(intent);
+                                } else {
+                                    makeToast("Please check internet connection");
+                                }
+                            }
+                        }.execute();
+
+                    } else {
+                        dialog.dismiss();
+                        Intent intent = new Intent(Attendee_DashboardActivity.this, TeacherTakeAttendanceActivity.class);
+                        intent.putExtra(TeacherTakeAttendanceActivity.EXTRA_TEACHER_CLASS, eventHost.getEventList().get(mViewPager.getCurrentItem()));
+                        intent.putExtra(TeacherTakeAttendanceActivity.EXTRA_ATTENDANCE_DATA, result);
+                        startActivity(intent);
+                    }
+                } else {
+                    dialog.dismiss();
+                    makeToast("Please check internet connection");
+                }
+            }
+        }.execute();
+    }
+
+
+    private void takeAttendanceCurrentLocationBtn() {
+        final List<Eventee> studentList = eventHost.getEventList().get(mViewPager.getCurrentItem()).getEventeeList();
+        if (studentList.size() < 1) {
+            makeToast("Please add Eventee to take attendance");
+            return;
+        }
+
+        new AsyncTask<Void, Void, String>() {
+            private ProgressDialog dialog = new ProgressDialog(Attendee_DashboardActivity.this);
+            Event event;
+
+            @Override
+            protected void onPreExecute() {
+                event = eventHost.getEventList().get(mViewPager.getCurrentItem());
+                dialog.setMessage("Please wait...");
+                dialog.setCancelable(false);
+                dialog.show();
+            }
+
+            @Override
+            protected String doInBackground(Void... params) {
+                String result = null;
+
+                HashMap<String, String> hm = new HashMap<>();
+                // user_id, student_id ( more than one comma separated ), class_code
+                hm.put("user_id", eventHost.getUserId());
+                hm.put("class_code", event.getUniqueCode());
+                hm.put("class_id", event.getId());
+                hm.put("type", "Automatic");
+                hm.put("student_id", StringUtils.getAllIdsFromStudentList(studentList, ','));
+
+                try {
+                    result = new WebUtils().post(AppConstants.URL_TAKE_ATTENDANCE_CURRENT_LOCATION, hm);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                return result;
+            }
+
+            @Override
+            protected void onPostExecute(String result) {
+                if (result != null) {
+
+                    if (result.contains("Error")) {
+                        new AsyncTask<Void, Void, String>() {
+                            @Override
+                            protected String doInBackground(Void... params) {
+                                String result = null;
+                                HashMap<String, String> hm = new HashMap<>();
+                                hm.put("user_id", eventHost.getUserId());
+                                hm.put("class_id", event.getId());
+
+                                try {
+                                    result = new WebUtils().post(AppConstants.URL_SHOW_ATTENDANCE_CURRENT_LOCATION, hm);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+                                return result;
+                            }
+
+                            @Override
+                            protected void onPostExecute(String result) {
+                                dialog.dismiss();
+                                if (result != null) {
+                                    Intent intent = new Intent(Attendee_DashboardActivity.this, TeacherTakeAttendanceCurrentLocationActivity.class);
+                                    intent.putExtra(TeacherTakeAttendanceCurrentLocationActivity.EXTRA_ATTENDANCE_DATA, result);
+                                    startActivity(intent);
+                                } else {
+                                    makeToast("Please check internet connection");
+                                }
+                            }
+                        }.execute();
+
+                    } else {
+                        dialog.dismiss();
+                        Intent intent = new Intent(Attendee_DashboardActivity.this, TeacherTakeAttendanceCurrentLocationActivity.class);
+                        intent.putExtra(TeacherTakeAttendanceCurrentLocationActivity.EXTRA_TEACHER_CLASS_INDEX, mViewPager.getCurrentItem());
+                        intent.putExtra(TeacherTakeAttendanceCurrentLocationActivity.EXTRA_ATTENDANCE_DATA, result);
+                        startActivity(intent);
+                    }
+                } else {
+                    dialog.dismiss();
+                    makeToast("Please check internet connection");
+                }
+            }
+        }.execute();
+
+    }
+
+
+    private void sendClassNotificationBtn() {
+        Intent intent = new Intent(Attendee_DashboardActivity.this, TeacherSendMessageToOneClass.class);
+        intent.putExtra(TeacherSendMessageToOneClass.EXTRA_TEACHER_CLASS, eventHost.getEventList().get(mViewPager.getCurrentItem()));
         startActivity(intent);
     }
+
+
+    private void studentsBtn() {
+        Intent intent = new Intent(Attendee_DashboardActivity.this, TeacherShowClassStudentsActivity.class);
+        intent.putExtra(TeacherShowClassStudentsActivity.EXTRA_STUDENT_CLASS, eventHost.getEventList().get(mViewPager.getCurrentItem()));
+        startActivity(intent);
+    }
+
+
+    private void openActivity(Class aClass, boolean finishThis) {
+        Intent intent = new Intent(Attendee_DashboardActivity.this, aClass);
+        startActivity(intent);
+        if (finishThis) {
+            finish();
+        }
+    }
+
 
     private void makeToast(String title) {
         Toast.makeText(Attendee_DashboardActivity.this, title, Toast.LENGTH_LONG).show();
     }
+
+
+    private void settingButton() {
+        if (settingPage.getVisibility() == View.VISIBLE) {
+            textAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.left_in);
+            mainPage.setAnimation(textAnimation);
+            mainPage.setVisibility(View.VISIBLE);
+
+            textAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.left_out);
+            settingPage.setAnimation(textAnimation);
+            settingPage.setVisibility(View.GONE);
+
+            settingButton.setImageResource(R.drawable.setting);
+        } else {
+            textAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.left_out);
+            mainPage.setAnimation(textAnimation);
+            mainPage.setVisibility(View.GONE);
+
+            textAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.left_in);
+            settingPage.setAnimation(textAnimation);
+            settingPage.setVisibility(View.VISIBLE);
+
+            settingButton.setImageResource(R.drawable.home_blue);
+
+        }
+    }
+
+
+    private void toggleNavigation() {
+        textAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.left_in);
+        navigationLayout.setAnimation(textAnimation);
+        navigationLayout.setVisibility(navigationLayout.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+    }
+
 
     @Override
     public void onBackPressed() {
@@ -267,88 +486,30 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
             textAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.right_out);
             navigationLayout.setAnimation(textAnimation);
             navigationLayout.setVisibility(View.GONE);
+        } else if (settingPage.getVisibility() == View.VISIBLE) {
+            textAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.left_in);
+            mainPage.setAnimation(textAnimation);
+            mainPage.setVisibility(View.VISIBLE);
+
+            textAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.left_out);
+            settingPage.setAnimation(textAnimation);
+            settingPage.setVisibility(View.GONE);
+
+            settingButton.setImageResource(R.drawable.setting);
         } else {
             super.onBackPressed();
         }
     }
 
+
     public void gotoBack(View view) {
         onBackPressed();
     }
 
-    private void updateDataAsync() {
-        new AsyncTask<Void, Void, String>() {
-
-            @Override
-            protected String doInBackground(Void... params) {
-                HashMap<String, String> hm = new HashMap<>();
-                hm.put("id", attendee.getUserId());
-                hm.put("role", String.valueOf(UserRole.Parent.getRole()));
-                try {
-                    return new WebUtils().post(AppConstants.URL_GET_DATA_BY_ID, hm);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(String result) {
-                if (result != null) {
-
-                    /*List<Event> teacherClasses = DataUtils.getParentChildrenListFromJsonString(result);
-
-                    if (attendee.getEventList().size() != teacherClasses.size()) {
-
-                        attendee.getEventList().clear();
-                        attendee.getEventList().addAll(teacherClasses);
-
-                        userUtils.saveUserWithDataToSharedPrefs(attendee, Parent.class);
-
-                        parentPagerAdapter.notifyDataSetChanged();
-                        setOneWordTextView(0);
-                    }*/
-                }
-            }
-        }.execute();
-    }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_EDIT_CHILD) {
-            if (resultCode == RESULT_OK) {
-                new AsyncTask<Void, Void, String>() {
-
-                    @Override
-                    protected String doInBackground(Void... params) {
-                        HashMap<String, String> hm = new HashMap<>();
-                        hm.put("id", attendee.getUserId());
-                        hm.put("role", String.valueOf(UserRole.Parent.getRole()));
-                        try {
-                            return new WebUtils().post(AppConstants.URL_GET_DATA_BY_ID, hm);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        return null;
-                    }
-
-                    @Override
-                    protected void onPostExecute(String result) {
-                        if (result != null) {
-
-                            /*List<Student> teacherClasses = DataUtils.getParentChildrenListFromJsonString(result);
-
-                            attendee.getEventList().clear();
-                            attendee.getEventList().addAll(teacherClasses);
-
-                            userUtils.saveUserWithDataToSharedPrefs(parent, Parent.class);
-*/
-                            parentPagerAdapter.notifyDataSetChanged();
-                            setOneWordTextView(0);
-                        }
-                    }
-                }.execute();
-            }
-        }
+    protected void onResume() {
+        super.onResume();
     }
+
 }

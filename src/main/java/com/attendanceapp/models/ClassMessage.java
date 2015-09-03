@@ -1,9 +1,10 @@
 package com.attendanceapp.models;
 
 public class ClassMessage {
-    private String message, time, from, toId, toEmail, classCode;
+    private String id, message, time, from, toId, toEmail, classCode, classId;
 
     public ClassMessage() {}
+
     public ClassMessage(String message, String time) {
         this.message = message;
         this.time = time;
@@ -55,5 +56,21 @@ public class ClassMessage {
 
     public void setClassCode(String classCode) {
         this.classCode = classCode;
+    }
+
+    public String getClassId() {
+        return classId;
+    }
+
+    public void setClassId(String classId) {
+        this.classId = classId;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }

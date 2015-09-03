@@ -1,10 +1,5 @@
 package com.attendanceapp.utils;
 
-import android.content.Context;
-import android.database.Cursor;
-import android.net.Uri;
-import android.provider.MediaStore;
-
 import com.attendanceapp.models.Attendance;
 import com.attendanceapp.models.ClassEventCompany;
 import com.attendanceapp.models.ClassMessage;
@@ -145,11 +140,24 @@ public final class DataUtils {
                         JSONObject object = children.getJSONObject(i);
                         Student student = new Student();
 
-                        student.setUserId(object.getString("student_id"));
-                        student.setUsername(object.getString("child_name"));
-                        student.setChildIdForLocation(object.getString("mainstu_id"));
-                        JSONObject studentObject = object.getJSONObject("Student");
-                        student.setEmail(studentObject.getString("student_email"));
+                        if (object.has("id")) {
+                            student.setUserId(object.getString("id"));
+                        }
+                        if (object.has("child_name")) {
+                            student.setUsername(object.getString("child_name"));
+                        }
+                        if (object.has("student_id")) {
+                            student.setAllClassesId(object.getString("student_id"));
+                        }
+                        if (object.has("mainstu_id")) {
+                            student.setChildIdForLocation(object.getString("mainstu_id"));
+                        }
+                        if (object.has("User")) {
+                            JSONObject studentObject = object.getJSONObject("User");
+                            if (studentObject.has("email")) {
+                                student.setEmail(studentObject.getString("email"));
+                            }
+                        }
 
                         students.add(student);
 
@@ -346,24 +354,75 @@ public final class DataUtils {
         return classMessageArrayList;
     }
 
-    public static String getImageNameFromPathPlusName(String pathWithName) {
-        return pathWithName.substring(pathWithName.lastIndexOf('/') + 1);
+    public static ArrayList<ClassMessage> getNotificationsArrayList(String jsonString) {
+
+        ArrayList<ClassMessage> classMessageArrayList = new ArrayList<>();
+        try {
+            JSONObject jsonObject = new JSONObject(jsonString);
+            JSONArray dataArray = jsonObject.getJSONArray("Data");
+
+            /* {
+      "Notification": {
+        "id": "1",
+        "user_id": "67",
+        "tech_id": "6",
+        "teacher_id": "2",
+        "message": "s3@m.com is using phone at this time",
+        "classCode": "2c2xwa",
+        "created": "2015-08-26 08:31:34"
+      }
+    },*/
+
+            for (int i = 0; i < dataArray.length(); i++) {
+                ClassMessage classMessage = new ClassMessage();
+                JSONObject index = dataArray.getJSONObject(i);
+                JSONObject jsonObject1 = index.getJSONObject("Notification");
+
+                // for id
+                if (jsonObject1.has("id")) {
+                    classMessage.setId(jsonObject1.getString("id"));
+                }
+
+                // for student id
+                if (jsonObject1.has("user_id")) {
+                    classMessage.setFrom(jsonObject1.getString("user_id"));
+                }
+
+                // for teacher id
+                if (jsonObject1.has("tech_id")) {
+                    classMessage.setToId(jsonObject1.getString("tech_id"));
+                }
+
+                // for class id
+                if (jsonObject1.has("teacher_id")) {
+                    classMessage.setClassId(jsonObject1.getString("teacher_id"));
+                }
+//                if (jsonObject1.has("student_email")) {
+//                    classMessage.setToEmail(jsonObject1.getString("student_email"));
+//                }
+                if (jsonObject1.has("message")) {
+                    classMessage.setMessage(jsonObject1.getString("message"));
+                }
+                if (jsonObject1.has("classCode")) {
+                    classMessage.setClassCode(jsonObject1.getString("classCode"));
+                }
+                if (jsonObject1.has("created")) {
+                    classMessage.setTime(jsonObject1.getString("created"));
+                }
+
+                classMessageArrayList.add(classMessage);
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+        return classMessageArrayList;
     }
 
-    public static String getRealPathFromURI(Uri contentURI, Context context) {
-        String result;
-        Cursor cursor = context.getContentResolver().query(contentURI, null, null, null, null);
-
-        if (cursor != null && cursor.moveToFirst()) {
-            int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
-            result = cursor.getString(idx);
-            cursor.close();
-
-        } else {
-            // Source is Dropbox or other similar local file path
-            result = contentURI.getPath();
-        }
-        return result;
+    public static String getImageNameFromPathPlusName(String pathWithName) {
+        return pathWithName.substring(pathWithName.lastIndexOf('/') + 1);
     }
 
     public static List<Attendance> getAttendanceListFromJsonString(String jsonString) {
@@ -662,30 +721,34 @@ public final class DataUtils {
                         teacherClass.setName(jsonObject.getString("className"));
                     }
 
-                    if (!jsonObject.has("companyName")) {
-                        simpleDateFormat.applyPattern("HH:mm:ss");
-
-                        if (jsonObject.has("startTime")) {
-                            calendar.setTime(simpleDateFormat.parse(jsonObject.getString("startTime")));
-                            teacherClass.setStartTime(calendar);
-                        }
-                        if (jsonObject.has("endTime")) {
-                            calendar.setTime(simpleDateFormat.parse(jsonObject.getString("endTime")));
-                            teacherClass.setEndTime(calendar);
-                        }
-
-                        simpleDateFormat.applyPattern("yyyy-mm-dd");
-
-                        if (jsonObject.has("startDate") && !"null".equalsIgnoreCase(jsonObject.getString("startDate"))) {
-                            calendar.setTime(simpleDateFormat.parse(jsonObject.getString("startDate")));
-                            teacherClass.setStartDate(calendar);
-                        }
-
-                        if (jsonObject.has("endDate") && !"null".equalsIgnoreCase(jsonObject.getString("endDate"))) {
-                            calendar.setTime(simpleDateFormat.parse(jsonObject.getString("endDate")));
-                            teacherClass.setEndDate(calendar);
-                        }
+//                    if (!jsonObject.has("companyName")) {
+                    simpleDateFormat.applyPattern("HH:mm:ss");
+                    /*"startTime": "04:30:00",
+                      "endTime": "04:30:00",
+                      "startDate": "2015-09-01",
+                      "endDate": "2015-09-01",
+                    */
+                    if (jsonObject.has("startTime")) {
+                        calendar.setTime(simpleDateFormat.parse(jsonObject.getString("startTime")));
+                        teacherClass.setStartTime(calendar);
                     }
+                    if (jsonObject.has("endTime")) {
+                        calendar.setTime(simpleDateFormat.parse(jsonObject.getString("endTime")));
+                        teacherClass.setEndTime(calendar);
+                    }
+
+                    simpleDateFormat.applyPattern("yyyy-MM-dd");
+
+                    if (jsonObject.has("startDate") && !"null".equalsIgnoreCase(jsonObject.getString("startDate"))) {
+                        calendar.setTime(simpleDateFormat.parse(jsonObject.getString("startDate")));
+                        teacherClass.setStartDate(calendar);
+                    }
+
+                    if (jsonObject.has("endDate") && !"null".equalsIgnoreCase(jsonObject.getString("endDate"))) {
+                        calendar.setTime(simpleDateFormat.parse(jsonObject.getString("endDate")));
+                        teacherClass.setEndDate(calendar);
+                    }
+//                    }
                     teacherClass.setRepeatType(getRepeatTypeFromString(jsonObject.getString("repeatType")));
                     teacherClass.setInterval(jsonObject.getInt("interval"));
                     teacherClass.setDistrict(jsonObject.getString("district"));
@@ -694,7 +757,8 @@ public final class DataUtils {
                     if (jsonObject.has("classCode")) {
                         teacherClass.setUniqueCode(jsonObject.getString("classCode"));
                     } else if (jsonObject.has("companyCode")) {
-                        teacherClass.setUniqueCode(jsonObject.getString("companyCode"));
+                        teacherClass.setUniqueCode(jsonObject.getString("meetingCode"));
+                        teacherClass.setCode(jsonObject.getString("companyCode"));
                     } else if (jsonObject.has("eventCode")) {
                         teacherClass.setUniqueCode(jsonObject.getString("eventCode"));
                     }

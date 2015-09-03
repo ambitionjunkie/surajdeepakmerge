@@ -80,9 +80,11 @@ public final class UserUtils {
     public String getUserDataFromSharedPrefs() {
         return sharedPreferences.getString(AppConstants.KEY_LOGGED_IN_USER_DATA, null);
     }
+
     public void saveUserToSharedPrefs(User user) {
         sharedPreferences.edit().putString(AppConstants.KEY_LOGGED_IN_USER, gson.toJson(user)).apply();
     }
+
     public void clearSharedPrefs() {
         sharedPreferences.edit().clear().apply();
     }

@@ -66,23 +66,27 @@ public final class AppConstants {
     /*
     * class_id
     */
-    public static final String URL_DELETE_CLASS_BY_TEACHER= "http://www.abdevs.com/attendance/Mobiles/deleteStudentByTeacher";
+    public static final String URL_DELETE_CLASS_BY_TEACHER = "http://www.abdevs.com/attendance/Mobiles/deleteStudentByTeacher";
 
     /*
     * studentAttendance_id
     */
-    public static final String URL_DELETE_STUDENT_ATTENDANCE_BY_TEACHER= "http://www.abdevs.com/attendance/Mobiles/deleteAttendanceByTeacher";
+    public static final String URL_DELETE_STUDENT_ATTENDANCE_BY_TEACHER = "http://www.abdevs.com/attendance/Mobiles/deleteAttendanceByTeacher";
 
     /*
     * studentAttendance_id,attend
     * */
-    public static final String URL_EDIT_STUDENT_ATTENDANCE_BY_TEACHER= "http://www.abdevs.com/attendance/Mobiles/editAttandence";
+    public static final String URL_EDIT_STUDENT_ATTENDANCE_BY_TEACHER = "http://www.abdevs.com/attendance/Mobiles/editAttandence";
 
     /*
     * user_id, class_id
     */
-    public static final String URL_CLASS_NOTIFICATION_LIST= "http://www.abdevs.com/attendance/Mobiles/notificationlist";
+    public static final String URL_CLASS_NOTIFICATION_LIST = "http://www.abdevs.com/attendance/Mobiles/notificationlist";
 
+    /*
+    * notification_id
+    */
+    public static final String URL_DELETE_NOTIFICATION = "http://www.abdevs.com/attendance/Mobiles/deleteNotification";
 
 
     /*
@@ -125,17 +129,17 @@ public final class AppConstants {
 
 
     /*
+    *
     * corporation related
+    *
     */
     public static final String URL_CREATE_COMPANY = "http://www.abdevs.com/attendance/Mobiles/addCompanyByManager";
-    public static final String URL_ADD_EMPLOYEE_TO_COMPANY= "http://www.abdevs.com/attendance/Mobiles/addEmployee";
-    public static final String URL_ADD_COMPANY_BY_EMPLOYEE= "http://www.abdevs.com/attendance/Mobiles/addCompanyByEmployee";
+    public static final String URL_ADD_EMPLOYEE_TO_COMPANY = "http://www.abdevs.com/attendance/Mobiles/addEmployee";
+    public static final String URL_ADD_COMPANY_BY_EMPLOYEE = "http://www.abdevs.com/attendance/Mobiles/addCompanyByEmployee";
     public static final String URL_TAKE_ATTENDANCE_BY_MANAGER = "http://www.abdevs.com/attendance/Mobiles/employeeAttendens";
 
+    // message,employee_email,meetingCode, employee_id, user_id , image_url
+    public static final String URL_MANAGER_SEND_NOTIFICATION = "http://www.abdevs.com/attendance/Mobiles/sendNotificationToEmployee";
 
-    /*
-        event host / attendee
-     */
-    public static final String KR_ADD_EVENT_BY_HOST = "http://www.abdevs.com/attendance/attendees/addEventByHost";
-    public static final String KR_ADD_EVENT_BY_ATTENDEE = "http://www.abdevs.com/attendance/attendees/addEventByAttendee";
+
 }

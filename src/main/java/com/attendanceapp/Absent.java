@@ -1,5 +1,6 @@
 package com.attendanceapp;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -23,8 +24,6 @@ import android.widget.Toast;
 
 import com.attendanceapp.models.Attendance;
 import com.attendanceapp.models.Teacher;
-import com.attendanceapp.models.TeacherClass;
-import com.attendanceapp.models.UserRole;
 import com.attendanceapp.utils.DataUtils;
 import com.attendanceapp.utils.PageHeader;
 import com.attendanceapp.utils.StringUtils;
@@ -47,8 +46,6 @@ public class Absent extends Activity implements View.OnClickListener {
     public static final String EXTRA_ATTENDANCE_DATA = "EXTRA_ATTENDANCE_DATA";
     public static final String EXTRA_TITLE = "EXTRA_TITLE";
     public static final String EXTRA_LIST_OPTION = "EXTRA_LIST_OPTION";
-    public static final String SHOW_NAME = "SHOW_NAME";
-    public static final String SHOW_DATE = "SHOW_DATE";
     public static final String SHOW_NAME_DATE = "SHOW_NAME_DATE";
     public static final String SHOW_EDIT_BUTTON = "SHOW_EDIT_BUTTON";
     private static final String TAG = Absent.class.getSimpleName();
@@ -63,7 +60,7 @@ public class Absent extends Activity implements View.OnClickListener {
     String classId;
 
 
-    private boolean showEditButton, showName, showNameDate, hideDeleteButton;
+    protected boolean showEditButton, showName, showNameDate, hideDeleteButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,9 +123,6 @@ public class Absent extends Activity implements View.OnClickListener {
         }
     }
 
-
-//    public enum Show {SHOW_NAME, SHOW_DATE, SHOW_NAME_DATE, SHOW_NAME_DATE_EDIT}
-
     public class AbsentListAdapter extends ArrayAdapter<Attendance> implements View.OnClickListener {
 
         private LayoutInflater inflater;
@@ -158,6 +152,7 @@ public class Absent extends Activity implements View.OnClickListener {
             }
         }
 
+        @SuppressLint("InflateParams")
         @Override
         public View getView(int position, View view, ViewGroup parent) {
 
@@ -286,7 +281,7 @@ public class Absent extends Activity implements View.OnClickListener {
                                 @Override
                                 protected void onPostExecute(String s) {
                                     progressDialog.dismiss();
-                                    JSONObject jObject = null;
+                                    JSONObject jObject;
                                     if (s == null) {
                                         makeToast("Error in updating!");
 
@@ -300,8 +295,6 @@ public class Absent extends Activity implements View.OnClickListener {
 
                                             } else if (jObject.has("Message")) {
                                                 makeToast("Updated successfully!");
-                                                list.remove(index);
-                                                attendanceList.remove(index);
                                                 updateDataAsync();
                                             }
 
@@ -372,7 +365,9 @@ public class Absent extends Activity implements View.OnClickListener {
                                 @Override
                                 protected void onPostExecute(String s) {
                                     progressDialog.dismiss();
-                                    JSONObject jObject = null;
+                                    progressDialog.cancel();
+
+                                    JSONObject jObject;
                                     if (s == null) {
                                         makeToast("Error in deleting!");
 
@@ -386,8 +381,6 @@ public class Absent extends Activity implements View.OnClickListener {
 
                                             } else if (jObject.has("Message")) {
                                                 makeToast("Deleted successfully!");
-                                                list.remove(index);
-                                                attendanceList.remove(index);
                                                 updateDataAsync();
                                             }
 
@@ -441,7 +434,7 @@ public class Absent extends Activity implements View.OnClickListener {
 
             @Override
             protected void onPostExecute(String result) {
-               parseDataAsync(result);
+                parseDataAsync(result);
             }
         }.execute();
 

@@ -94,7 +94,7 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_event_host_add_event);
+        setContentView(R.layout.activity_settingup__class);
 
         sharedPreferences = AndroidUtils.getCommonSharedPrefs(getApplicationContext());
         userUtils = new UserUtils(EventHost_AddEventActivity.this);
@@ -465,7 +465,7 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
 //                }
 //                selectedDatesText.setText(selectedDates.toString());
 //
-//                classSetup.setRepeatDates(selectedDates);
+//                classEventCompany.setRepeatDates(selectedDates);
 //            }
 //        });
 
@@ -513,6 +513,7 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
 
                     Address address = userUtils.getAddress(latitude, longitude);
                     locationButton.setText(userUtils.getAddressString(address));
+
                 } else {
                     Toast.makeText(getApplicationContext(), "Please check location services", Toast.LENGTH_LONG).show();
                 }
@@ -564,9 +565,9 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
             errorMessage = "Please select start and end date";
         } else if (classSetup.getRepeatType() == null) {
             errorMessage = "Please select class repeat type";
-        }/* else if ((classSetup.getLatitude() == 0.0d || classSetup.getLongitude() == 0.0d) && "".equals(classSetup.getBeacons())) {
+        } else if ((classSetup.getLatitude() == 0.0d || classSetup.getLongitude() == 0.0d) && "".equals(classSetup.getBeacons())) {
             errorMessage = "Please select location";
-        }*/
+        }
 //
 //        if (errorMessage != null) {
 //            makeToast(errorMessage);
@@ -574,18 +575,18 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
 //        }
 
         // validate for correct values
-//                if (classSetup.getStartTime().after(classSetup.getEndTime()) || classSetup.getStartTime().equals(classSetup.getEndTime())) {
+//                if (classEventCompany.getStartTime().after(classEventCompany.getEndTime()) || classEventCompany.getStartTime().equals(classEventCompany.getEndTime())) {
 //                    errorMessage = "Start time should be less than end time";
-//                } else if (classSetup.getStartDate().get(Calendar.MONTH) < Calendar.getInstance().get(Calendar.MONTH)
-//                        || classSetup.getStartDate().get(Calendar.YEAR) < Calendar.getInstance().get(Calendar.YEAR)
-//                        || classSetup.getStartDate().get(Calendar.DATE) < Calendar.getInstance().get(Calendar.DATE)) {
+//                } else if (classEventCompany.getStartDate().get(Calendar.MONTH) < Calendar.getInstance().get(Calendar.MONTH)
+//                        || classEventCompany.getStartDate().get(Calendar.YEAR) < Calendar.getInstance().get(Calendar.YEAR)
+//                        || classEventCompany.getStartDate().get(Calendar.DATE) < Calendar.getInstance().get(Calendar.DATE)) {
 //                    errorMessage = "Start date should not be before than current date";
-//                } else if (classSetup.getStartDate().equals(classSetup.getEndDate()) || classSetup.getStartDate().after(classSetup.getEndDate())) {
+//                } else if (classEventCompany.getStartDate().equals(classEventCompany.getEndDate()) || classEventCompany.getStartDate().after(classEventCompany.getEndDate())) {
 //                    errorMessage = "Start date should be less than end date";
 //                } else
-//        if (classSetup.getRepeatType().equals(RepeatType.REPEAT_DAY) && classSetup.getRepeatDays().isEmpty()) {
+//        if (classEventCompany.getRepeatType().equals(RepeatType.REPEAT_DAY) && classEventCompany.getRepeatDays().isEmpty()) {
 //            errorMessage = "Please select repeat days";
-//        } else if (classSetup.getRepeatType().equals(RepeatType.REPEAT_DATE) && classSetup.getRepeatDates().isEmpty()) {
+//        } else if (classEventCompany.getRepeatType().equals(RepeatType.REPEAT_DATE) && classEventCompany.getRepeatDates().isEmpty()) {
 //            errorMessage = "Please select repeat dates";
 //        }
 
@@ -593,10 +594,10 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
         if (errorMessage != null) {
             makeToast(errorMessage);
         } else {
-            //Log.i(TAG, classSetup.toString());
+            //Log.i(TAG, classEventCompany.toString());
 
             String formatForTime = "%d:%d";
-            String formatForDate = "%d-%d-%d";
+            String formatForDate = "%d/%d/%d";
             Calendar calendar;
 
             Map<String, String> keysAndValues = new HashMap<>();
@@ -606,15 +607,15 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
             }
             keysAndValues.put("user_id", user.getUserId());
             keysAndValues.put("status", "1");
-            keysAndValues.put("eventName", classSetup.getClassName());
+            keysAndValues.put("className", classSetup.getClassName());
             calendar = classSetup.getStartTime();
             keysAndValues.put("startTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
             calendar = classSetup.getEndTime();
             keysAndValues.put("endTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
             calendar = classSetup.getStartDate();
-            keysAndValues.put("startDate", String.format(formatForDate, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH)));
+            keysAndValues.put("startDate", String.format(formatForDate, calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR)));
             calendar = classSetup.getEndDate();
-            keysAndValues.put("endDate", String.format(formatForDate, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH)));
+            keysAndValues.put("endDate", String.format(formatForDate, calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR)));
             keysAndValues.put("latitude", String.valueOf(classSetup.getLatitude()));
             keysAndValues.put("longitude", String.valueOf(classSetup.getLongitude()));
             keysAndValues.put("repeatType", classSetup.getRepeatType().toString());
@@ -633,13 +634,13 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
             }
 
             if (classSetup.getCode() != null) {
-                keysAndValues.put("eventCode", classSetup.getCode());
+                keysAndValues.put("code", classSetup.getCode());
             }
 
             Log.i(TAG, keysAndValues.toString());
             // user_id,className,startTime,endTime,startDate,endDate,repeatType,repeatDays(if values of repeatType is WEEKLY),interval,district,code,latitude,longitude,status
             // finally upload data to server using async task
-            UploadDataAsync(AppConstants.KR_ADD_EVENT_BY_HOST, keysAndValues);
+            UploadDataAsync(AppConstants.URL_CREATE_CLASS, keysAndValues);
         }
     }
 
@@ -850,7 +851,7 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
 
                     }
                 }
-                openActivity(EventHost_DashboardActivity.class);
+                openActivity(TeacherDashboardActivity.class);
                 finish();
             }
         }.execute();
