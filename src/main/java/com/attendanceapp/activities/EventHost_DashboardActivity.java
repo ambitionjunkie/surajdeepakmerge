@@ -52,7 +52,7 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
     private static final int REQUEST_EDIT_ACCOUNT = 100;
 
 
-    protected ImageView addClassButton;
+    protected ImageView addEventButton;
     private TextView oneWordTextView;
     protected LinearLayout takeAttendanceBtn, takeAttendanceCurrentLocationBtn, studentsBtn, sendClassNotificationBtn, mainPage;
 
@@ -90,7 +90,7 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
 
         mViewPager = (ViewPager) findViewById(R.id.pager);
         swipePage = (ScrollView) findViewById(R.id.swipePage);
-        addClassButton = (ImageView) findViewById(R.id.addClassButton);
+        addEventButton = (ImageView) findViewById(R.id.addEventButton);
         oneWordTextView = (TextView) findViewById(R.id.oneWordTitle);
 
         navigationLayout = (FrameLayout) findViewById(R.id.navigation);
@@ -111,7 +111,7 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
         classNotificationLayout = (RelativeLayout) findViewById(R.id.classNotificationLayout);
         onOffNotificationImageView = (ImageView) findViewById(R.id.onOffNotificationImageView);
 
-        addClassButton.setOnClickListener(this);
+        addEventButton.setOnClickListener(this);
         settingButton.setOnClickListener(this);
         takeAttendanceBtn.setOnClickListener(this);
         takeAttendanceCurrentLocationBtn.setOnClickListener(this);
@@ -183,10 +183,10 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
                 takeAttendance("gps");
                 break;
 
-            case R.id.addClassButton:
+            case R.id.addEventButton:
                 Bundle bundle = new Bundle();
                 bundle.putInt(AppConstants.EXTRA_USER_ROLE, UserRole.EventHost.getRole());
-                AndroidUtils.openActivity(this, CreateClassEventCompanyActivity.class, bundle, false);
+                AndroidUtils.openActivity(this, EventHost_AddEventActivity.class, bundle, false);
                 break;
 
             case R.id.settingButton:
