@@ -141,5 +141,9 @@ public final class AppConstants {
     // message,employee_email,meetingCode, employee_id, user_id , image_url
     public static final String URL_MANAGER_SEND_NOTIFICATION = "http://www.abdevs.com/attendance/Mobiles/sendNotificationToEmployee";
 
-
+    /*
+        event host / attendee
+    */
+    public static final String KR_ADD_EVENT_BY_HOST = "http://www.abdevs.com/attendance/attendees/addEventByHost";
+    public static final String KR_ADD_EVENT_BY_ATTENDEE = "http://www.abdevs.com/attendance/attendees/addEventByAttendee";
 }
