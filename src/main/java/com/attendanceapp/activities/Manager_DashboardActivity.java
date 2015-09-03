@@ -2,6 +2,7 @@ package com.attendanceapp.activities;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -31,6 +32,7 @@ import com.attendanceapp.models.User;
 import com.attendanceapp.models.UserRole;
 import com.attendanceapp.utils.AndroidUtils;
 import com.attendanceapp.utils.DataUtils;
+import com.attendanceapp.utils.GPSTracker;
 import com.attendanceapp.utils.NavigationPage;
 import com.attendanceapp.utils.StringUtils;
 import com.attendanceapp.utils.UserUtils;
@@ -51,7 +53,7 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
 
     protected ImageView addClassButton;
     private TextView oneWordTextView;
-
+    GPSTracker gpsTracker;
     /* main page functionality */
     protected LinearLayout takeAttendanceBtn, takeAttendanceCurrentLocationBtn, studentsBtn, sendClassNotificationBtn, mainPage;
 
@@ -156,6 +158,7 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
                 setOneWordTextView(position);
             }
         });
+        gpsTracker = new GPSTracker(getApplicationContext());
     }
 
     private void setOneWordTextView(int current) {
@@ -530,6 +533,21 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
                     hm.put("type", "ByBeacon");
                 } else if ("gps".equalsIgnoreCase(attendanceUsing)) {
                     hm.put("type", "Automatic");
+                    if (gpsTracker.canGetLocation()) {
+                        Location location = gpsTracker.getLocation();
+
+                        if (location != null) {
+                            final double latitude = location.getLatitude();
+                            final double longitude = location.getLongitude();
+
+                            hm.put("teach_lat",String.valueOf(latitude));
+                            hm.put("teach_long", String.valueOf(longitude));
+
+                        }
+                    }
+                    else{
+                        gpsTracker.showSettingsAlert();
+                    }
                 }
 
                 try {
