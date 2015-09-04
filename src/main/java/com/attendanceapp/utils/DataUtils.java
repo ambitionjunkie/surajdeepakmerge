@@ -1,6 +1,7 @@
 package com.attendanceapp.utils;
 
 import com.attendanceapp.models.Attendance;
+import com.attendanceapp.models.AttendeeEvent;
 import com.attendanceapp.models.ClassEventCompany;
 import com.attendanceapp.models.ClassMessage;
 import com.attendanceapp.models.RepeatType;
@@ -829,5 +830,24 @@ public final class DataUtils {
         return users;
     }
 
+    public static List<AttendeeEvent> getAttendeesListFromJson(String jsonString) {
+        List<AttendeeEvent> list = new LinkedList<>();
 
+        try {
+            JSONObject userDataJsonObject = new JSONObject(jsonString);
+            JSONArray dataArray = userDataJsonObject.getJSONArray("Data");
+
+
+            for (int i = 0; i < dataArray.length(); i ++)
+            {
+                JSONObject zeroObject = dataArray.getJSONObject(i);
+                JSONObject obj = zeroObject.getJSONObject("Attendee");
+                AttendeeEvent ev = new AttendeeEvent(obj.getString("eventname"), obj.getString("eventcode"));
+                list.add(ev);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }

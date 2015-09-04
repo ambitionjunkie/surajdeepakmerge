@@ -25,10 +25,11 @@ import com.attendanceapp.OnSwipeTouchListener;
 import com.attendanceapp.R;
 import com.attendanceapp.activities.Attendee_AddEventActivity;
 import com.attendanceapp.activities.MapActivity;
-import com.attendanceapp.adapters.ParentPagerAdapter;
+import com.attendanceapp.adapters.AttendeePagerAdapter;
 import com.attendanceapp.adapters.Parent_ChildClassExpendableListAdapter;
 import com.attendanceapp.models.Attendance;
 import com.attendanceapp.models.Attendee;
+import com.attendanceapp.models.AttendeeEvent;
 import com.attendanceapp.models.Event;
 import com.attendanceapp.models.Parent;
 import com.attendanceapp.models.Student;
@@ -63,7 +64,7 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
     private FrameLayout navigationLayout;
 
     Animation textAnimation;
-    ParentPagerAdapter parentPagerAdapter;
+    AttendeePagerAdapter parentPagerAdapter;
 
     private Attendee attendee;
     private TreeMap<String, List<Attendance>> classAttendanceMap = new TreeMap<>();
@@ -100,10 +101,10 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
         absentListView.setOnTouchListener(swipeTouchListener);
         absentLinearLayout.setOnTouchListener(swipeTouchListener);
         mainPage.setOnTouchListener(swipeTouchListener);
-/*
+
         setParentPagerAdapter();
         setOneWordTextView(0);
-
+/*
         listAdapter = new Parent_ChildClassExpendableListAdapter(Attendee_DashboardActivity.this, classAttendanceMap);
         absentListView.setAdapter(listAdapter);
 
@@ -124,14 +125,14 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
     private void setOneWordTextView(int current) {
         oneWordTextView.setText("");
         if (attendee.getEventList().size() > current) {
-//            oneWordTextView.setText(String.valueOf(attendee.getEventList().get(current).getUsername().charAt(0)).toUpperCase());
+            oneWordTextView.setText(String.valueOf(attendee.getEventList().get(current).getEventName().charAt(0)).toUpperCase());
             showAbsentList(attendee.getEventList().get(current));
         }
         showMessageIfNoClass();
     }
 
     private void setParentPagerAdapter() {
-//        parentPagerAdapter = new ParentPagerAdapter(getSupportFragmentManager(), attendee.getEventList());
+        parentPagerAdapter = new AttendeePagerAdapter(getSupportFragmentManager(), attendee.getEventList());
         mViewPager.setAdapter(parentPagerAdapter);
     }
 
@@ -156,7 +157,7 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
 
         void changeTitle() {
             int current = mViewPager.getCurrentItem();
-            //oneWordTextView.setText(String.valueOf(attendee.getEventList().get(current).getUsername().charAt(0)).toUpperCase());
+            oneWordTextView.setText(String.valueOf(attendee.getEventList().get(current).getEventName().charAt(0)).toUpperCase());
             showAbsentList(attendee.getEventList().get(current));
         }
     };
@@ -164,15 +165,15 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
     @Override
     protected void onResume() {
         super.onResume();
-        Parent parent1 = userUtils.getUserWithDataFromSharedPrefs(Parent.class);
+        Attendee parent1 = userUtils.getUserWithDataFromSharedPrefs(Attendee.class);
 
         if (parent1 != null) {
-            List<Event> teacherClasses = attendee.getEventList();
-            List<Student> teacher1Classes = parent1.getStudentList();
+            List<AttendeeEvent> teacherClasses = attendee.getEventList();
+            List<AttendeeEvent> teacher1Classes = parent1.getEventList();
 
             if (teacherClasses != null && teacher1Classes != null && teacherClasses.size() != teacher1Classes.size()) {
                 attendee.getEventList().clear();
-                //attendee.getStudentList().addAll(parent1.getStudentList());
+                attendee.getEventList().addAll(parent1.getEventList());
                 parentPagerAdapter.notifyDataSetChanged();
                 setOneWordTextView(0);
             }
@@ -183,8 +184,8 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
         updateDataAsync();
     }
 
-    private void showAbsentList(final Event ev) {
-        new AsyncTask<Void, Void, String>() {
+    private void showAbsentList(final AttendeeEvent ev) {
+/*        new AsyncTask<Void, Void, String>() {
             @Override
             protected void onPreExecute() {
                 absentListProgress.setVisibility(View.VISIBLE);
@@ -224,7 +225,7 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
                     }
                 }
             }
-        }.execute();
+        }.execute();*/
     }
 
     private void updateList() {
@@ -283,9 +284,8 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
             protected String doInBackground(Void... params) {
                 HashMap<String, String> hm = new HashMap<>();
                 hm.put("id", attendee.getUserId());
-                hm.put("role", String.valueOf(UserRole.Parent.getRole()));
                 try {
-                    return new WebUtils().post(AppConstants.URL_GET_DATA_BY_ID, hm);
+                    return new WebUtils().post(AppConstants.KR_GET_ATTENDEE_BY_ID, hm);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -296,18 +296,18 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
             protected void onPostExecute(String result) {
                 if (result != null) {
 
-                    /*List<Event> teacherClasses = DataUtils.getParentChildrenListFromJsonString(result);
+                    List<AttendeeEvent> attendeeEvents = DataUtils.getAttendeesListFromJson(result);
 
-                    if (attendee.getEventList().size() != teacherClasses.size()) {
+                    if (attendee.getEventList().size() != attendeeEvents.size()) {
 
                         attendee.getEventList().clear();
-                        attendee.getEventList().addAll(teacherClasses);
+                        attendee.getEventList().addAll(attendeeEvents);
 
-                        userUtils.saveUserWithDataToSharedPrefs(attendee, Parent.class);
+                        userUtils.saveUserWithDataToSharedPrefs(attendee, Attendee.class);
 
                         parentPagerAdapter.notifyDataSetChanged();
                         setOneWordTextView(0);
-                    }*/
+                    }
                 }
             }
         }.execute();

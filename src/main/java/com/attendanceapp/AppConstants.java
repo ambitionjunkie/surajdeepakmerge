@@ -146,4 +146,5 @@ public final class AppConstants {
     */
     public static final String KR_ADD_EVENT_BY_HOST = "http://www.abdevs.com/attendance/attendees/addEventByHost";
     public static final String KR_ADD_EVENT_BY_ATTENDEE = "http://www.abdevs.com/attendance/attendees/addEventByAttendee";
+    public static final String KR_GET_ATTENDEE_BY_ID = "http://www.abdevs.com/attendance/attendees/attendeelist";
 }
