@@ -36,9 +36,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:layout_toEndOf="@+id/addChildLayout"
+                android:layout_toEndOf="@+id/addEventLayout"
                 android:layout_toLeftOf="@+id/navigationButton"
-                android:layout_toRightOf="@+id/addChildLayout"
+                android:layout_toRightOf="@+id/addEventLayout"
                 android:gravity="center"
                 android:text="Home"
                 android:textAppearance="?android:attr/textAppearanceLarge"
@@ -120,11 +120,11 @@
                     android:groupIndicator="@null"
                     android:visibility="gone" />
 
-                <ProgressBar
+              <!--  <ProgressBar
                     android:id="@+id/absentListProgress"
                     android:layout_width="100dp"
                     android:layout_height="100dp"
-                    android:layout_gravity="center" />
+                    android:layout_gravity="center" />-->
 
                 <!--<TextView-->
                     <!--android:id="@+id/error"-->

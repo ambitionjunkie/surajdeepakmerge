@@ -240,7 +240,7 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
             protected void onPreExecute() {
                 dialog.setMessage("Please wait...");
                 dialog.setCancelable(false);
-                dialog.show();
+              //  dialog.show();
             }
 
             @Override
@@ -259,7 +259,7 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
 
             @Override
             protected void onPostExecute(String result) {
-                dialog.dismiss();
+              //  dialog.dismiss();
                 if (result != null) {
                     try {
                         JSONObject object = new JSONObject(result);

@@ -465,7 +465,8 @@ public final class DataUtils {
             for (int i = 0; i < dataArray.length(); i++) {
                 Attendance attendance = new Attendance();
                 JSONObject index = dataArray.getJSONObject(i);
-                JSONObject jsonObject1 = index.getJSONObject("StudentAttendance");
+                if (index.has("StudentAttendance")){
+                    JSONObject jsonObject1 = index.getJSONObject("StudentAttendance");
 
                 attendance.setId(jsonObject1.getString("id"));
                 attendance.setTeacherId(jsonObject1.getString("user_id"));
@@ -482,6 +483,27 @@ public final class DataUtils {
 //                attendance.setUsername(jsonObject2.getString("student_name"));
                     attendance.setStudentName(jsonObject2.getString("student_email").substring(0, jsonObject2.getString("student_email").indexOf("@")));
                     attendance.setStudentImage(jsonObject2.getString("image"));
+                }
+            }
+                else if(index.has("EmployeeAttendance")){
+                    JSONObject jsonObject1 = index.getJSONObject("EmployeeAttendance");
+
+                    attendance.setId(jsonObject1.getString("id"));
+                    attendance.setTeacherId(jsonObject1.getString("user_id"));
+                    attendance.setStudentId(jsonObject1.getString("employee_id"));
+                    attendance.setClassId(jsonObject1.getString("company_id"));
+                    attendance.setClassCode(jsonObject1.getString("companyCode"));
+                    attendance.setIsPresent("p".equalsIgnoreCase(jsonObject1.getString("attend")));
+                    attendance.setCreateDate(jsonObject1.getString("created"));
+
+                   /* if (index.has("Student")) {
+                        JSONObject jsonObject2 = index.getJSONObject("Student");
+                        attendance.setParentEmail(jsonObject2.getString("parent_email"));
+                        attendance.setStudentEmail(jsonObject2.getString("student_email"));
+//                attendance.setUsername(jsonObject2.getString("student_name"));
+                        attendance.setStudentName(jsonObject2.getString("student_email").substring(0, jsonObject2.getString("student_email").indexOf("@")));
+                        attendance.setStudentImage(jsonObject2.getString("image"));
+                    }*/
                 }
                 list.add(attendance);
             }

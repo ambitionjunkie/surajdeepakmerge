@@ -115,6 +115,7 @@ public class ReportsActivity extends Activity implements OnClickListener {
 
         userUtils = new UserUtils(this);
         Intent intent = getIntent();
+
         Teacher teacher = userUtils.getUserWithDataFromSharedPrefs(Teacher.class);
         teacherClass = teacher.getTeacherClassList().get(intent.getIntExtra(EXTRA_CLASS_INDEX, 0));
 

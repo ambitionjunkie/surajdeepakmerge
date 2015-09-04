@@ -187,7 +187,7 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
         new AsyncTask<Void, Void, String>() {
             @Override
             protected void onPreExecute() {
-                absentListProgress.setVisibility(View.VISIBLE);
+               // absentListProgress.setVisibility(View.VISIBLE);
                 absentListView.setVisibility(View.GONE);
             }
 
@@ -205,7 +205,7 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
 
             @Override
             protected void onPostExecute(String result) {
-                absentListProgress.setVisibility(View.GONE);
+                //absentListProgress.setVisibility(View.GONE);
                 absentListView.setVisibility(View.VISIBLE);
 
                 if (result != null) {

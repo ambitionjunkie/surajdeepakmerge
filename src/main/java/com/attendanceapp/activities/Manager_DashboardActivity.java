@@ -299,6 +299,7 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
 
         Intent intent = new Intent(Manager_DashboardActivity.this, ReportsActivity.class);
         intent.putExtra(ReportsActivity.EXTRA_CLASS_INDEX, mViewPager.getCurrentItem());
+        System.out.println("This is current item>>"+mViewPager.getCurrentItem());
         startActivity(intent);
 
     }

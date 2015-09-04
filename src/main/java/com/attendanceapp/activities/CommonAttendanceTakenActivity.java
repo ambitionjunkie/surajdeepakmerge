@@ -58,7 +58,7 @@ public class CommonAttendanceTakenActivity extends Activity implements View.OnCl
     protected UserRole userRole;
     protected ClassEventCompany classEventCompany;
     UserUtils userUtils;
-
+    boolean val=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -154,9 +154,11 @@ public class CommonAttendanceTakenActivity extends Activity implements View.OnCl
         switch (v.getId()) {
             case R.id.absenceLayout:
                 showAbsentList();
+                val=false;
                 break;
             case R.id.presentLayout:
                 showPresentList();
+                val=true;
                 break;
         }
     }
@@ -210,7 +212,12 @@ public class CommonAttendanceTakenActivity extends Activity implements View.OnCl
             } else {
                 holder = (ViewHolder) view.getTag();
             }
-
+            if(val){
+                holder.marker.setText("Mark as absent");
+            }
+            else{
+                holder.marker.setText("Mark as here");
+            }
             User attendance = attendanceList.get(position);
 
 //            holder.studentName.setText(attendance.getUsername());
@@ -220,11 +227,19 @@ public class CommonAttendanceTakenActivity extends Activity implements View.OnCl
             holder.marker.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    final int position = (Integer) v.getTag();
-                    System.out.println("removing position = " + position);
-                    presentStudentsList.add(absentStudentsList.get(position));
-                    absentStudentsList.remove(position);
-                    listAdapter.notifyDataSetChanged();
+                    if(val){
+                        final int position = (Integer) v.getTag();
+                        System.out.println("removing position = " + position);
+                        absentStudentsList.add(presentStudentsList.get(position));
+                        presentStudentsList.remove(position);
+                        listAdapter.notifyDataSetChanged();
+                    }else {
+                        final int position = (Integer) v.getTag();
+                        System.out.println("removing position = " + position);
+                        presentStudentsList.add(absentStudentsList.get(position));
+                        absentStudentsList.remove(position);
+                        listAdapter.notifyDataSetChanged();
+                    }
                 }
             });
 

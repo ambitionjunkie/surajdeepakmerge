@@ -106,7 +106,8 @@ public class UserExpandableListAdapter extends BaseExpandableListAdapter {
         if (view == null) {
             view = inflater.inflate(R.layout.list_item_student, null, false);
             holder = new ItemViewHolder();
-
+            holder.headerEmail=(TextView) view.findViewById(R.id.headerEmail);
+            holder.headerEmailParent=(TextView) view.findViewById(R.id.headerEmailParent);
             holder.editStudentEmail = (ImageButton) view.findViewById(R.id.editStudentEmail);
             holder.studentEmail = (TextView) view.findViewById(R.id.studentEmail);
 //            holder.parentEmail = (TextView) view.findViewById(R.id.parentEmail);
@@ -118,7 +119,10 @@ public class UserExpandableListAdapter extends BaseExpandableListAdapter {
         } else {
             holder = (ItemViewHolder) view.getTag();
         }
-
+        if(context instanceof ShowClassEventCompanyUsersActivity) {
+            holder.headerEmail.setText("Employee Email");
+            holder.headerEmailParent.setVisibility(View.GONE);
+        }
         User student = studentList.get(groupPosition);
 
         holder.student = student;
@@ -177,7 +181,7 @@ public class UserExpandableListAdapter extends BaseExpandableListAdapter {
     public class ItemViewHolder {
         //        TextView studentEmail, parentEmail;
         ImageButton editStudentEmail;
-        TextView studentEmail;
+        TextView studentEmail,headerEmail,headerEmailParent;
         LinearLayout studentPanel, parentEmailLayout;
         ListView parentEmailList;
 

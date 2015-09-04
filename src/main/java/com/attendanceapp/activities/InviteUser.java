@@ -216,9 +216,10 @@ public class InviteUser extends Activity implements View.OnClickListener {
         } else if (userRole == UserRole.Manager) {
             //"company_id,companyCode,parentEmail,employeeEmail,status, image
             params.put("company_id", requestClassId);
-            params.put("companyCode", requestClassCode);
+            params.put("meetingCode", requestClassCode);
             params.put("employeeEmail", studentEmailText);
             new UploadDataAsync().execute(AppConstants.URL_ADD_EMPLOYEE_TO_COMPANY, params);
+            System.out.println(requestClassId+" "+requestClassCode);
 
         }
     }
