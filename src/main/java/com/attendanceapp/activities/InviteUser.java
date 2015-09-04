@@ -60,7 +60,7 @@ public class InviteUser extends Activity implements View.OnClickListener {
     protected TextView classCode, addAnotherStudentBtn, SkipForNowBtn;
     protected ImageView addStudentBtn, selectedImage;
     private EditText studentEmail, parentEmail;
-    Button addImageButton;
+    Button addImageButton,doneIt;
     RelativeLayout skipButtonLayout;
 
     protected String requestClassCode, requestClassId, requestStudentId, requestStudentEmail, requestParentEmail, selectedImageName;
@@ -84,6 +84,7 @@ public class InviteUser extends Activity implements View.OnClickListener {
         studentEmail = (EditText) findViewById(R.id.editStudentEmail);
         parentEmail = (EditText) findViewById(R.id.editParentEmail);
         addImageButton = (Button) findViewById(R.id.img);
+        doneIt = (Button) findViewById(R.id.doneIt);
         skipButtonLayout = (RelativeLayout) findViewById(R.id.skipButtonLayout);
 
         Bundle bundle = getIntent().getExtras();
@@ -108,10 +109,12 @@ public class InviteUser extends Activity implements View.OnClickListener {
         if (!isFirstTime) {
             skipButtonLayout.setVisibility(View.GONE);
         }
-
+        addStudentBtn.setVisibility(View.GONE);
+        addAnotherStudentBtn.setVisibility(View.GONE);
         addStudentBtn.setOnClickListener(this);
         addImageButton.setOnClickListener(this);
         selectedImage.setOnClickListener(this);
+        doneIt.setOnClickListener(this);
     }
 
     private void setRoleBasedProperties(UserRole userRole) {
@@ -151,7 +154,9 @@ public class InviteUser extends Activity implements View.OnClickListener {
             case R.id.selectedImage:
                 AndroidUtils.selectImage(InviteUser.this, REQUEST_STUDENT_IMAGE);
                 break;
-
+            case R.id.doneIt:
+                addStudentBtn();
+                break;
             case R.id.imgAdd:
                 addStudentBtn();
                 break;

@@ -31,6 +31,8 @@ import com.attendanceapp.AppConstants;
 import com.attendanceapp.R;
 import com.attendanceapp.adapters.Reports_AbsenteeExpendableListAdapter;
 import com.attendanceapp.models.Attendance;
+import com.attendanceapp.models.ClassEventCompany;
+import com.attendanceapp.models.Employee;
 import com.attendanceapp.models.Teacher;
 import com.attendanceapp.models.TeacherClass;
 import com.attendanceapp.utils.DataUtils;
@@ -61,6 +63,7 @@ import java.util.TreeMap;
 public class ReportsActivity extends Activity implements OnClickListener {
 
     public static final String EXTRA_CLASS_INDEX = "EXTRA_CLASS_INDEX";
+    public static final String EXTRA_TYPE = "EXTRA_TYPE";
     private static final String TAG = ReportsActivity.class.getSimpleName();
     PageHeader pageHeader;
 
@@ -73,6 +76,7 @@ public class ReportsActivity extends Activity implements OnClickListener {
     TreeMap<String, List<Attendance>> classAttendanceMap = new TreeMap<>();
 
     TeacherClass teacherClass;
+    ClassEventCompany companyClass;
     UserUtils userUtils;
 
     final String[] MONTHS = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
@@ -116,8 +120,8 @@ public class ReportsActivity extends Activity implements OnClickListener {
         userUtils = new UserUtils(this);
         Intent intent = getIntent();
 
-        Teacher teacher = userUtils.getUserWithDataFromSharedPrefs(Teacher.class);
-        teacherClass = teacher.getTeacherClassList().get(intent.getIntExtra(EXTRA_CLASS_INDEX, 0));
+            Teacher teacher = userUtils.getUserWithDataFromSharedPrefs(Teacher.class);
+            teacherClass = teacher.getTeacherClassList().get(intent.getIntExtra(EXTRA_CLASS_INDEX, 0));
 
         customReportListAdapter = new AbsentListAdapter(this, customReportAttendanceList);
         customReportListView.setAdapter(customReportListAdapter);
@@ -175,6 +179,8 @@ public class ReportsActivity extends Activity implements OnClickListener {
 
         new AsyncTask<Void, Void, String>() {
             String classId = teacherClass.getId();
+
+
             ProgressDialog dialog = new ProgressDialog(ReportsActivity.this);
 
             @Override
@@ -455,6 +461,7 @@ public class ReportsActivity extends Activity implements OnClickListener {
     }
 
     private void txtAbsenteeReport() {
+
 
         new AsyncTask<Void, Void, String>() {
             String classId = teacherClass.getId();

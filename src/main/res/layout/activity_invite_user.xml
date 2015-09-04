@@ -141,6 +141,16 @@
                 android:text="Add another student"
                 android:textColor="@color/white"
                 android:textSize="20sp" />
+            <Button
+                android:id="@+id/doneIt"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="@color/white"
+                android:gravity="center"
+                android:text="Done"
+                android:textAllCaps="false"
+                android:textColor="@color/blue"
+                android:textSize="20sp" />
         </LinearLayout>
     </ScrollView>
 

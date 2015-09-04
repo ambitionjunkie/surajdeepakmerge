@@ -44,7 +44,7 @@ public class ParentAddChildActivity extends Activity {
     EditText classCodeEditText, classNameEditText;
     Button done, skip, saveIt;
     ImageView saveButton;
-    LinearLayout addAnotherClass;
+    LinearLayout addAnotherClass,deleteButtonLayout;
     ImageButton deleteButton;
 
 
@@ -73,6 +73,7 @@ public class ParentAddChildActivity extends Activity {
         classCodeEditText = (EditText) findViewById(R.id.classCode);
         saveButton = (ImageView) findViewById(R.id.saveButton);
         addAnotherClass = (LinearLayout) findViewById(R.id.addAnotherClass);
+        deleteButtonLayout = (LinearLayout) findViewById(R.id.deleteButtonLayout);
         saveIt=(Button) findViewById(R.id.saveIt);
         skip = (Button) findViewById(R.id.skip);
         done = (Button) findViewById(R.id.done);
@@ -189,7 +190,9 @@ public class ParentAddChildActivity extends Activity {
             classCodeEditText.setVisibility(View.GONE);
             addAnotherClass.setVisibility(View.GONE);
             done.setVisibility(View.GONE);
+            deleteButtonLayout.setVisibility(View.VISIBLE);
             deleteButton.setVisibility(View.VISIBLE);
+
         }
 
         deleteButton.setOnClickListener(new View.OnClickListener() {

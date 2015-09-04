@@ -251,6 +251,7 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
                 HashMap<String, String> hm = new HashMap<>();
                 hm.put("user_id", user.getUserId());
                 hm.put("class_id", classId);
+                hm.put("role", "2");
 
                 try {
                     return new WebUtils().post(AppConstants.URL_SHOW_ATTENDANCE_CURRENT_LOCATION, hm);
@@ -299,6 +300,7 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
 
         Intent intent = new Intent(Manager_DashboardActivity.this, ReportsActivity.class);
         intent.putExtra(ReportsActivity.EXTRA_CLASS_INDEX, mViewPager.getCurrentItem());
+        intent.putExtra(ReportsActivity.EXTRA_TYPE,"manager");
         System.out.println("This is current item>>"+mViewPager.getCurrentItem());
         startActivity(intent);
 
