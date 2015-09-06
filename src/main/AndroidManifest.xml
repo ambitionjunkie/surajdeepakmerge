@@ -238,7 +238,12 @@
         <activity
             android:name=".activities.Attendee_AddEventActivity"
             android:windowSoftInputMode="stateHidden|adjustPan" />
-
+        <activity
+            android:name=".activities.ShowEventUsersActivity"
+            android:windowSoftInputMode="stateHidden|adjustPan" />
+        <activity
+            android:name=".activities.EventHostSendMessage"
+            android:windowSoftInputMode="stateHidden|adjustPan" />
         <activity
             android:name=".activities.CreateClassEventCompanyActivity"
             android:windowSoftInputMode="stateHidden|adjustPan" />

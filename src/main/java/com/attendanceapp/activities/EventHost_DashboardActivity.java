@@ -2,6 +2,7 @@ package com.attendanceapp.activities;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -24,16 +25,14 @@ import com.attendanceapp.Absent;
 import com.attendanceapp.AppConstants;
 import com.attendanceapp.OnSwipeTouchListener;
 import com.attendanceapp.R;
-import com.attendanceapp.TeacherAddClassActivity;
 import com.attendanceapp.TeacherSendMessageToOneClass;
-import com.attendanceapp.TeacherShowClassStudentsActivity;
-import com.attendanceapp.TeacherTakeAttendanceCurrentLocationActivity;
-import com.attendanceapp.adapters.BaseViewPagerAdapter;
-import com.attendanceapp.models.ClassEventCompany;
+import com.attendanceapp.adapters.EventHostPagerAdapter;
+import com.attendanceapp.models.Event;
 import com.attendanceapp.models.User;
 import com.attendanceapp.models.UserRole;
 import com.attendanceapp.utils.AndroidUtils;
 import com.attendanceapp.utils.DataUtils;
+import com.attendanceapp.utils.GPSTracker;
 import com.attendanceapp.utils.NavigationPage;
 import com.attendanceapp.utils.StringUtils;
 import com.attendanceapp.utils.UserUtils;
@@ -49,11 +48,13 @@ import java.util.List;
 public class EventHost_DashboardActivity extends FragmentActivity implements View.OnClickListener, NavigationPage.NavigationFunctions {
 
     private static final String TAG = EventHost_DashboardActivity.class.getSimpleName();
-    private static final int REQUEST_EDIT_ACCOUNT = 100;
+    private static final int REQUEST_EDIT_EVENT = 251;
 
 
-    protected ImageView addEventButton;
+    protected ImageView addClassButton;
     private TextView oneWordTextView;
+    GPSTracker gpsTracker;
+    /* main page functionality */
     protected LinearLayout takeAttendanceBtn, takeAttendanceCurrentLocationBtn, studentsBtn, sendClassNotificationBtn, mainPage;
 
     /* for settings page functionality */
@@ -64,7 +65,7 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
 
 
     private ScrollView swipePage;
-    private BaseViewPagerAdapter baseViewPagerAdapter;
+    private EventHostPagerAdapter baseViewPagerAdapter;
     private ViewPager mViewPager;
     private Animation textAnimation;
     private FrameLayout navigationLayout;
@@ -72,11 +73,12 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
     private UserUtils userUtils;
     protected User user;
 
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_EDIT_ACCOUNT) {
+        if (requestCode == REQUEST_EDIT_EVENT) {
             if (resultCode == RESULT_OK) {
-                updateDataAsync();
+                updateDataAsync(true);
             }
         }
     }
@@ -90,7 +92,7 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
 
         mViewPager = (ViewPager) findViewById(R.id.pager);
         swipePage = (ScrollView) findViewById(R.id.swipePage);
-        addEventButton = (ImageView) findViewById(R.id.addEventButton);
+        addClassButton = (ImageView) findViewById(R.id.addClassButton);
         oneWordTextView = (TextView) findViewById(R.id.oneWordTitle);
 
         navigationLayout = (FrameLayout) findViewById(R.id.navigation);
@@ -111,7 +113,7 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
         classNotificationLayout = (RelativeLayout) findViewById(R.id.classNotificationLayout);
         onOffNotificationImageView = (ImageView) findViewById(R.id.onOffNotificationImageView);
 
-        addEventButton.setOnClickListener(this);
+        addClassButton.setOnClickListener(this);
         settingButton.setOnClickListener(this);
         takeAttendanceBtn.setOnClickListener(this);
         takeAttendanceCurrentLocationBtn.setOnClickListener(this);
@@ -144,7 +146,7 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
         userUtils = new UserUtils(EventHost_DashboardActivity.this);
         user = userUtils.getUserFromSharedPrefs();
 
-        baseViewPagerAdapter = new BaseViewPagerAdapter(getSupportFragmentManager(), user.getClassEventCompanyArrayList());
+        baseViewPagerAdapter = new EventHostPagerAdapter(getSupportFragmentManager(), user.getEventArrayList());
         mViewPager.setAdapter(baseViewPagerAdapter);
 
         setOneWordTextView(0);
@@ -156,19 +158,20 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
                 setOneWordTextView(position);
             }
         });
+        gpsTracker = new GPSTracker(getApplicationContext());
     }
 
     private void setOneWordTextView(int current) {
-        if (user.getClassEventCompanyArrayList().size() > current) {
-            oneWordTextView.setText(String.valueOf(user.getClassEventCompanyArrayList().get(current).getName().charAt(0)).toUpperCase());
+        oneWordTextView.setText("");
+        if (user.getEventArrayList().size() > current) {
+            oneWordTextView.setText(String.valueOf(user.getEventArrayList().get(current).getName().charAt(0)).toUpperCase());
         }
         showMessageIfNoClass();
         onOffNotificationsSetImage();
     }
 
-
     private void showMessageIfNoClass() {
-        swipePage.setVisibility(user.getClassEventCompanyArrayList().size() == 0 ? View.GONE : View.VISIBLE);
+        swipePage.setVisibility(user.getEventArrayList().size() == 0 ? View.GONE : View.VISIBLE);
     }
 
     @Override
@@ -183,7 +186,7 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
                 takeAttendance("gps");
                 break;
 
-            case R.id.addEventButton:
+            case R.id.addClassButton:
                 Bundle bundle = new Bundle();
                 bundle.putInt(AppConstants.EXTRA_USER_ROLE, UserRole.EventHost.getRole());
                 AndroidUtils.openActivity(this, EventHost_AddEventActivity.class, bundle, false);
@@ -227,12 +230,12 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
     private void absenceLayout() {
 
         if (!haveStudentsInClass()) {
-            makeToast("Please add students!");
+            makeToast("Please add attendees!");
             return;
         }
 
         new AsyncTask<Void, Void, String>() {
-            ClassEventCompany teacherClass = user.getClassEventCompanyArrayList().get(mViewPager.getCurrentItem());
+            Event teacherClass = user.getEventArrayList().get(mViewPager.getCurrentItem());
             String classId = teacherClass.getId();
             ProgressDialog dialog = new ProgressDialog(EventHost_DashboardActivity.this);
 
@@ -240,7 +243,7 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
             protected void onPreExecute() {
                 dialog.setMessage("Please wait...");
                 dialog.setCancelable(false);
-              //  dialog.show();
+                dialog.show();
             }
 
             @Override
@@ -248,6 +251,7 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
                 HashMap<String, String> hm = new HashMap<>();
                 hm.put("user_id", user.getUserId());
                 hm.put("class_id", classId);
+                hm.put("role", String.valueOf(UserRole.EventHost.getRole()));
 
                 try {
                     return new WebUtils().post(AppConstants.URL_SHOW_ATTENDANCE_CURRENT_LOCATION, hm);
@@ -259,7 +263,7 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
 
             @Override
             protected void onPostExecute(String result) {
-              //  dialog.dismiss();
+                dialog.dismiss();
                 if (result != null) {
                     try {
                         JSONObject object = new JSONObject(result);
@@ -290,18 +294,20 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
     private void reportsLayout() {
 
         if (!haveStudentsInClass()) {
-            makeToast("Please add students!");
+            makeToast("Please add attendees!");
             return;
         }
 
         Intent intent = new Intent(EventHost_DashboardActivity.this, ReportsActivity.class);
         intent.putExtra(ReportsActivity.EXTRA_CLASS_INDEX, mViewPager.getCurrentItem());
+        intent.putExtra(ReportsActivity.EXTRA_TYPE,"eventhost");
+        System.out.println("This is current item>>" + mViewPager.getCurrentItem());
         startActivity(intent);
 
     }
 
     private void onOffNotifications() {
-        ClassEventCompany teacherClass = getTeacherClassOnThisPage();
+        Event teacherClass = getTeacherClassOnThisPage();
         if (teacherClass == null) {
             return;
         }
@@ -309,12 +315,12 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
         onOffNotificationsSetImage();
     }
 
-    private ClassEventCompany getTeacherClassOnThisPage() {
-        return user.getClassEventCompanyArrayList().size() > mViewPager.getCurrentItem() ? user.getClassEventCompanyArrayList().get(mViewPager.getCurrentItem()) : null;
+    private Event getTeacherClassOnThisPage() {
+        return user.getEventArrayList().size() > mViewPager.getCurrentItem() ? user.getEventArrayList().get(mViewPager.getCurrentItem()) : null;
     }
 
     private void onOffNotificationsSetImage() {
-        ClassEventCompany teacherClass = getTeacherClassOnThisPage();
+        Event teacherClass = getTeacherClassOnThisPage();
         if (teacherClass == null) {
             return;
         }
@@ -324,43 +330,49 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
 
     private void classNotificationLayout() {
         if (!haveStudentsInClass()) {
-            makeToast("Please add students!");
+            makeToast("Please add attendees!");
             return;
         }
-        Intent intent = new Intent(EventHost_DashboardActivity.this, TeacherSendMessageToOneClass.class);
+        Intent intent = new Intent(EventHost_DashboardActivity.this, EventHostSendMessage.class);
         intent.putExtra(TeacherSendMessageToOneClass.EXTRA_STUDENT_CLASS_INDEX, mViewPager.getCurrentItem());
         intent.putExtra(TeacherSendMessageToOneClass.EXTRA_HIDE_MESSAGE_BOX, true);
         startActivity(intent);
     }
 
     private void classInformationLayout() {
-        Intent intent = new Intent(EventHost_DashboardActivity.this, TeacherAddClassActivity.class);
-        intent.putExtra(TeacherAddClassActivity.EXTRA_TEACHER_CLASS_INDEX, mViewPager.getCurrentItem());
-        startActivity(intent);
+        Bundle bundle = new Bundle();
+        bundle.putInt(AppConstants.EXTRA_USER_ROLE, UserRole.EventHost.getRole());
+        bundle.putInt(AppConstants.EXTRA_SELECTED_INDEX, mViewPager.getCurrentItem());
+        Intent intent = new Intent(this, EventHost_AddEventActivity.class);
+        intent.putExtras(bundle);
+        startActivityForResult(intent, REQUEST_EDIT_EVENT);
     }
 
     private void sendClassNotificationBtn() {
         if (!haveStudentsInClass()) {
-            makeToast("Please add students!");
+            makeToast("Please add attendees!");
             return;
         }
-        Intent intent = new Intent(EventHost_DashboardActivity.this, TeacherSendMessageToOneClass.class);
-        intent.putExtra(TeacherSendMessageToOneClass.EXTRA_STUDENT_CLASS_INDEX, mViewPager.getCurrentItem());
+        Intent intent = new Intent(EventHost_DashboardActivity.this, EventHostSendMessage.class);
+        intent.putExtra(UserSendMessageToOneClass.EXTRA_SELECTED_CLASS_INDEX, mViewPager.getCurrentItem());
+        intent.putExtra(AppConstants.EXTRA_USER_ROLE, UserRole.EventHost.getRole());
         startActivity(intent);
     }
 
     private boolean haveStudentsInClass() {
         int viewPagerIndex = mViewPager.getCurrentItem();
-        List<ClassEventCompany> list = user.getClassEventCompanyArrayList();
-        ClassEventCompany teacherClass = list.size() > viewPagerIndex ? list.get(viewPagerIndex) : null;
+        List<Event> list = user.getEventArrayList();
+        Event teacherClass = list.size() > viewPagerIndex ? list.get(viewPagerIndex) : null;
 
         return teacherClass != null && teacherClass.getUsers().size() > 0;
     }
 
     private void studentsBtn() {
-        Intent intent = new Intent(EventHost_DashboardActivity.this, TeacherShowClassStudentsActivity.class);
-        intent.putExtra(TeacherShowClassStudentsActivity.EXTRA_STUDENT_CLASS_INDEX, mViewPager.getCurrentItem());
-        startActivity(intent);
+        Bundle bundle = new Bundle();
+        bundle.putInt(AppConstants.EXTRA_USER_ROLE, UserRole.EventHost.getRole());
+        bundle.putInt(AppConstants.EXTRA_SELECTED_INDEX, mViewPager.getCurrentItem());
+
+        AndroidUtils.openActivity(this, ShowEventUsersActivity.class, bundle, false);
     }
 
     private void makeToast(String title) {
@@ -421,27 +433,36 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
     @Override
     protected void onResume() {
         super.onResume();
-        User user1 = userUtils.getUserWithDataFromSharedPrefs(User.class);
+        User user1 = userUtils.getUserFromSharedPrefs();
 
         if (user1 != null) {
-            List<ClassEventCompany> mainList = user.getClassEventCompanyArrayList();
-            List<ClassEventCompany> newList = user1.getClassEventCompanyArrayList();
+            List<Event> mainList = user.getEventArrayList();
+            List<Event> newList = user1.getEventArrayList();
 
             if (mainList != null && newList != null && mainList.size() != newList.size()) {
-                user.getClassEventCompanyArrayList().clear();
-                user.getClassEventCompanyArrayList().addAll(user1.getClassEventCompanyArrayList());
+                user.getEventArrayList().clear();
+                user.getEventArrayList().addAll(user1.getEventArrayList());
                 baseViewPagerAdapter.notifyDataSetChanged();
                 setOneWordTextView(0);
             }
         }
 
         new NavigationPage(this, userUtils.getUserFromSharedPrefs());
-        updateDataAsync();
+        updateDataAsync(false);
     }
 
-    private void updateDataAsync() {
+    private void updateDataAsync(final boolean deleteLastData) {
         new AsyncTask<Void, Void, String>() {
+            private ProgressDialog progressDialog = new ProgressDialog(EventHost_DashboardActivity.this);
 
+            @Override
+            protected void onPreExecute() {
+                if (deleteLastData) {
+                    progressDialog.setMessage("Please wait...");
+                    progressDialog.setCancelable(false);
+                    progressDialog.show();
+                }
+            }
             @Override
             protected String doInBackground(Void... params) {
                 HashMap<String, String> hm = new HashMap<>();
@@ -457,16 +478,20 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
 
             @Override
             protected void onPostExecute(String result) {
+                if (deleteLastData) {
+                    progressDialog.dismiss();
+                    progressDialog.cancel();
+                }
                 if (result != null) {
 
-                    List<ClassEventCompany> newList = DataUtils.getClassEventCompanyArrayListFromJsonString(result);
+                    List<Event> newList = DataUtils.getEventArrayListFromJsonString(result);
 
-                    if (user.getClassEventCompanyArrayList().size() != newList.size()) {
+                    if (deleteLastData || (user.getEventArrayList().size() != newList.size())) {
 
-                        user.getClassEventCompanyArrayList().clear();
-                        user.getClassEventCompanyArrayList().addAll(newList);
+                        user.getEventArrayList().clear();
+                        user.getEventArrayList().addAll(newList);
 
-                        userUtils.saveUserWithDataToSharedPrefs(user, User.class);
+                        userUtils.saveUserToSharedPrefs(user);
 
                         baseViewPagerAdapter.notifyDataSetChanged();
                         setOneWordTextView(0);
@@ -478,12 +503,12 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
     }
 
     public void takeAttendance(final String attendanceUsing) {
-        User user = userUtils.getUserWithDataFromSharedPrefs(User.class);
-        final ClassEventCompany classEventCompany = user.getClassEventCompanyArrayList().get(mViewPager.getCurrentItem());
-        final List<User> studentList = classEventCompany.getUsers();
+        final User user = userUtils.getUserFromSharedPrefs();
+        final Event hostevent = user.getEventArrayList().get(mViewPager.getCurrentItem());
+        final List<User> studentList = hostevent.getUsers();
 
         if (studentList.size() < 1) {
-            makeToast("Please add students to take attendance");
+            makeToast("Please add attendees to take attendance");
             return;
         }
 
@@ -500,22 +525,36 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
             @Override
             protected String doInBackground(Void... params) {
                 String result = null;
-
+                // user_id, employee_id ( more than one comma separated ), company_code, company_id, type(Manual, Automatic, ByBeacon)"
                 HashMap<String, String> hm = new HashMap<>();
-                // user_id, student_id ( more than one comma separated ), class_code
-                hm.put("user_id", EventHost_DashboardActivity.this.user.getUserId());
-                hm.put("class_code", classEventCompany.getUniqueCode());
-                hm.put("class_id", classEventCompany.getId());
-                hm.put("student_id", StringUtils.getAllIdsFromStudentList(studentList, ','));
+                hm.put("user_id", user.getUserId());
+                hm.put("event_code", hostevent.getUniqueCode());
+                hm.put("event_id", hostevent.getId());
+                hm.put("eventee_id", StringUtils.getAllIdsFromStudentList(studentList, ','));
 
                 if ("beacons".equalsIgnoreCase(attendanceUsing)) {
                     hm.put("type", "ByBeacon");
                 } else if ("gps".equalsIgnoreCase(attendanceUsing)) {
                     hm.put("type", "Automatic");
+                    if (gpsTracker.canGetLocation()) {
+                        Location location = gpsTracker.getLocation();
+
+                        if (location != null) {
+                            final double latitude = location.getLatitude();
+                            final double longitude = location.getLongitude();
+
+                            hm.put("teach_lat",String.valueOf(latitude));
+                            hm.put("teach_long", String.valueOf(longitude));
+
+                        }
+                    }
+                    else{
+                        gpsTracker.showSettingsAlert();
+                    }
                 }
 
                 try {
-                    result = new WebUtils().post(AppConstants.URL_TAKE_ATTENDANCE_CURRENT_LOCATION, hm);
+                    result = new WebUtils().post(AppConstants.URL_TAKE_ATTENDANCE_BY_EVENT_HOST, hm);
                 } catch (IOException e) {
                     Log.e(TAG, e.getLocalizedMessage());
                     e.printStackTrace();
@@ -526,54 +565,24 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
 
             @Override
             protected void onPostExecute(String result) {
+                dialog.dismiss();
+                dialog.cancel();
+
                 if (result != null) {
 
-                    if (result.contains("Error")) {
-                        new AsyncTask<Void, Void, String>() {
-
-                            @Override
-                            protected String doInBackground(Void... params) {
-                                String result = null;
-                                HashMap<String, String> hm = new HashMap<>();
-                                hm.put("user_id", EventHost_DashboardActivity.this.user.getUserId());
-                                hm.put("class_id", classEventCompany.getId());
-
-                                try {
-                                    result = new WebUtils().post(AppConstants.URL_SHOW_ATTENDANCE_CURRENT_LOCATION, hm);
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-
-                                return result;
-                            }
-
-                            @Override
-                            protected void onPostExecute(String result) {
-                                dialog.dismiss();
-                                dialog.cancel();
-                                if (result != null) {
-                                    Intent intent = new Intent(EventHost_DashboardActivity.this, TeacherTakeAttendanceCurrentLocationActivity.class);
-                                    intent.putExtra(TeacherTakeAttendanceCurrentLocationActivity.EXTRA_ATTENDANCE_DATA, result);
-                                    startActivity(intent);
-                                } else {
-                                    makeToast("Please check internet connection");
-                                }
-                            }
-                        }.execute();
+                    if (result.contains("Error") || result.contains("error")) {
+                        makeToast("Error in getting attendance!");
 
                     } else {
-                        dialog.dismiss();
-                        dialog.cancel();
                         Intent intent;
-                        intent = new Intent(EventHost_DashboardActivity.this, TeacherTakeAttendanceCurrentLocationActivity.class);
-                        intent.putExtra(TeacherTakeAttendanceCurrentLocationActivity.EXTRA_TEACHER_CLASS_INDEX, mViewPager.getCurrentItem());
-                        intent.putExtra(TeacherTakeAttendanceCurrentLocationActivity.EXTRA_ATTENDANCE_DATA, result);
-//                        }
+                        intent = new Intent(EventHost_DashboardActivity.this, CommonAttendanceTakenActivity.class);
+                        intent.putExtra(CommonAttendanceTakenActivity.EXTRA_SELECTED_CLASS_INDEX, mViewPager.getCurrentItem());
+                        intent.putExtra(AppConstants.EXTRA_USER_ROLE, UserRole.EventHost.getRole());
+                        intent.putExtra(CommonAttendanceTakenActivity.EXTRA_ATTENDANCE_DATA, result);
+
                         startActivity(intent);
                     }
                 } else {
-                    dialog.dismiss();
-                    dialog.cancel();
                     makeToast("Please check internet connection");
                 }
             }
@@ -594,10 +603,4 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
             return true;
         }
     };
-
-
-//    @Override
-//    public void viewNavigationNotifications() {
-//
-//    }
 }

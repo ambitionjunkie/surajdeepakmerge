@@ -1,8 +1,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:background="@color/blue"
-              android:orientation="vertical">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/blue"
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="fill_parent"
@@ -23,7 +23,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center_horizontal"
-            android:text="Setting Up Event"
+            android:text="Event Setup"
             android:textColor="@color/white"
             android:textSize="20sp"/>
 
@@ -59,8 +59,8 @@
                 android:paddingLeft="20dp"
                 android:hint="Event name"
                 android:textColor="@color/white"
-                android:textColorHint="@color/white"
                 android:textCursorDrawable="@null"
+                android:textColorHint="@color/white"
                 android:textSize="20sp">
 
                 <requestFocus/>
@@ -116,12 +116,12 @@
                 android:layout_marginBottom="10dp"
                 android:background="#187ebe"
                 android:ems="30"  android:gravity="center_vertical"
-                android:hint="Company ( Optional)"
+                android:hint="District ( Optional)"
                 android:inputType="text"
                 android:paddingLeft="20dp"
                 android:textColor="@color/white"
-                android:textColorHint="@color/white"
                 android:textCursorDrawable="@null"
+                android:textColorHint="@color/white"
                 android:textSize="20sp"/>
 
             <EditText
@@ -135,8 +135,8 @@
                 android:inputType="text"
                 android:paddingLeft="20dp"
                 android:textColor="@color/white"
-                android:textColorHint="@color/white"
                 android:textCursorDrawable="@null"
+                android:textColorHint="@color/white"
                 android:textSize="20sp"/>
 
             <Button

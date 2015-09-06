@@ -1,8 +1,10 @@
 package com.attendanceapp.utils;
 
 import com.attendanceapp.models.Attendance;
+import com.attendanceapp.models.Attendee;
 import com.attendanceapp.models.ClassEventCompany;
 import com.attendanceapp.models.ClassMessage;
+import com.attendanceapp.models.Event;
 import com.attendanceapp.models.RepeatType;
 import com.attendanceapp.models.Student;
 import com.attendanceapp.models.StudentClass;
@@ -851,5 +853,181 @@ public final class DataUtils {
         return users;
     }
 
+    private static ArrayList<User> getUserListInEvent(final JSONArray student) {
+        ArrayList<User> users = new ArrayList<>();
 
+        for (int i = 0; i < student.length(); i++) {
+            try {
+                JSONObject object = student.getJSONObject(i);
+                User user = new User();
+
+                user.setUserId(object.getString("id"));
+                user.getParentEmailList().add(object.getString("parent_email"));
+                user.setStatus(object.getInt("status"));
+                user.setCreateDate(object.getString("created"));
+                user.setImageName(object.getString("image"));
+
+                String email = "";
+                if (object.has("student_email")) {
+                    email = object.getString("student_email");
+                } else if (object.has("employee_email")) {
+                    email = object.getString("employee_email");
+                } else if (object.has("eventee_email")) {
+                    email = object.getString("eventee_email");
+                }
+                user.setEmail(email);
+
+                users.add(user);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return users;
+    }
+
+    public static Attendee getAttendeeFromJsonString(String jsonString) {
+
+        Attendee student = new Attendee();
+
+        try {
+            JSONObject jsonObject = new JSONObject(jsonString);
+            JSONArray dataArray = jsonObject.getJSONArray("Data");
+
+            for (int i = 0; i < dataArray.length(); i++) {
+                JSONObject index = dataArray.getJSONObject(i);
+
+                if (index.has("Event")) {
+                    JSONObject jsonObject1 = index.getJSONObject("Event");
+                    Event studentClass = new Event();
+
+                    studentClass.setId(jsonObject1.getString("id"));
+                    //studentClass.set(jsonObject1.getString("user_id"));
+                    studentClass.setName(jsonObject1.getString("eventName"));
+                    studentClass.setUniqueCode(jsonObject1.getString("eventCode"));
+
+                    student.getEventArrayList().add(studentClass);
+                }
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+        return student;
+    }
+
+    public static ArrayList<Event> getEventArrayListFromJsonString(String jsonString) {
+
+        // {"Data":[{"Event":[]}]}
+
+        ArrayList<Event> teacherClassList = new ArrayList<>();
+
+        try {
+            JSONObject userDataJsonObject = new JSONObject(jsonString);
+            JSONArray dataArray = userDataJsonObject.getJSONArray("Data");
+            JSONObject zeroObject = dataArray.getJSONObject(0);
+
+            JSONArray classArray;
+
+            if (zeroObject.has("Event")) {
+                classArray = zeroObject.getJSONArray("Event");
+
+            } else if (zeroObject.has("Company")) {
+                classArray = zeroObject.getJSONArray("Company");
+
+            } else {
+                classArray = zeroObject.getJSONArray("Class");
+            }
+
+            if (classArray != null) {
+                for (int i = 0; i < classArray.length(); i++) {
+                    JSONObject jsonObject = classArray.getJSONObject(i);
+                    Event teacherClass = new Event();
+
+                    teacherClass.setId(jsonObject.getString("id"));
+                    teacherClass.getMaker().setUserId(jsonObject.getString("user_id"));
+
+                    if (jsonObject.has("eventName")) {
+                        teacherClass.setName(jsonObject.getString("eventName"));
+                    } else if (jsonObject.has("companyName")) {
+                        teacherClass.setName(jsonObject.getString("companyName"));
+                    } else if (jsonObject.has("className")) {
+                        teacherClass.setName(jsonObject.getString("className"));
+                    }
+
+//                    if (!jsonObject.has("companyName")) {
+                    simpleDateFormat.applyPattern("HH:mm:ss");
+                    /*"startTime": "04:30:00",
+                      "endTime": "04:30:00",
+                      "startDate": "2015-09-01",
+                      "endDate": "2015-09-01",
+                    */
+                    if (jsonObject.has("startTime")) {
+                        calendar.setTime(simpleDateFormat.parse(jsonObject.getString("startTime")));
+                        teacherClass.setStartTime(calendar);
+                    }
+                    if (jsonObject.has("endTime")) {
+                        calendar.setTime(simpleDateFormat.parse(jsonObject.getString("endTime")));
+                        teacherClass.setEndTime(calendar);
+                    }
+
+                    simpleDateFormat.applyPattern("yyyy-MM-dd");
+
+                    if (jsonObject.has("startDate") && !"null".equalsIgnoreCase(jsonObject.getString("startDate"))) {
+                        calendar.setTime(simpleDateFormat.parse(jsonObject.getString("startDate")));
+                        teacherClass.setStartDate(calendar);
+                    }
+
+                    if (jsonObject.has("endDate") && !"null".equalsIgnoreCase(jsonObject.getString("endDate"))) {
+                        calendar.setTime(simpleDateFormat.parse(jsonObject.getString("endDate")));
+                        teacherClass.setEndDate(calendar);
+                    }
+//                    }
+                    teacherClass.setRepeatType(getRepeatTypeFromString(jsonObject.getString("repeatType")));
+                    teacherClass.setInterval(jsonObject.getInt("interval"));
+                    teacherClass.setDistrict(jsonObject.getString("district"));
+                    teacherClass.setCode(jsonObject.getString("code"));
+
+                    if (jsonObject.has("classCode")) {
+                        teacherClass.setUniqueCode(jsonObject.getString("classCode"));
+                    } else if (jsonObject.has("companyCode")) {
+                        teacherClass.setUniqueCode(jsonObject.getString("meetingCode"));
+                        teacherClass.setCode(jsonObject.getString("companyCode"));
+                    } else if (jsonObject.has("eventCode")) {
+                        teacherClass.setUniqueCode(jsonObject.getString("eventCode"));
+                    }
+
+
+                    teacherClass.setLatitude(jsonObject.getDouble("latitude"));
+                    teacherClass.setLongitude(jsonObject.getDouble("longitude"));
+                    teacherClass.setStatus(jsonObject.getInt("status"));
+                    teacherClass.setCreateDate(jsonObject.getString("created"));
+                    teacherClass.setModifiedDate(jsonObject.getString("modified"));
+
+                    if (jsonObject.has("Beacon")) {
+                        teacherClass.setBeaconList(getBeaconsList(jsonObject.getJSONArray("Beacon")));
+                    }
+
+
+                    if (jsonObject.has("Student")) {
+                        //classEventCompany.setUsers(getTeacherClassStudentsList(jsonObject.getJSONArray("Student")));
+                    } else if (jsonObject.has("Eventee")) {
+                        teacherClass.setUsers(getUserListInEvent(jsonObject.getJSONArray("Eventee")));
+                    } else if (jsonObject.has("Employee")) {
+                        teacherClass.setUsers(getUserListInClassEventCompany(jsonObject.getJSONArray("Employee")));
+                    }
+
+
+                    teacherClassList.add(teacherClass);
+                }
+            }
+
+        } catch (JSONException | ParseException e) {
+            e.printStackTrace();
+        }
+        return teacherClassList;
+    }
 }

@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@color/blue"
     android:orientation="vertical"
-    tools:context=".StudentAddClassActivity">
+    tools:context=".AddClassEventCompanyActivity">
 
     <RelativeLayout
         android:id="@+id/relativeLayout2"
@@ -50,13 +50,12 @@
             </LinearLayout>
 
             <EditText
-                android:id="@+id/eventName"
+                android:id="@+id/className"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginBottom="10dp"
                 android:background="#187ebe"
                 android:ems="30"
-                android:hint="Event name"
                 android:inputType="textShortMessage"
                 android:paddingLeft="20dp"
                 android:textColor="@color/white"
@@ -69,13 +68,12 @@
 
 
             <EditText
-                android:id="@+id/eventCode"
+                android:id="@+id/classCode"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginBottom="10dp"
                 android:background="#187ebe"
                 android:ems="30"
-                android:hint="Event code"
                 android:inputType="textShortMessage"
                 android:paddingLeft="20dp"
                 android:textColor="@color/white"
@@ -99,7 +97,7 @@
                 android:textSize="20sp"/>
 
             <TextView
-                android:id="@+id/addAnotherEvent"
+                android:id="@+id/addAnotherClass"
                 android:layout_width="wrap_content"
                 android:layout_height="50dp"
                 android:layout_gravity="center"
@@ -108,7 +106,6 @@
                 android:ems="30"
                 android:gravity="center"
                 android:src="@drawable/add"
-                android:text="Add another event"
                 android:textColor="@color/white"
                 android:textColorHint="@color/white"
                 android:textSize="20sp"/>

@@ -15,7 +15,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
@@ -25,6 +24,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -34,60 +34,55 @@ import android.widget.Toast;
 import com.attendanceapp.AppConstants;
 import com.attendanceapp.R;
 import com.attendanceapp.SelectLocationActivity;
-import com.attendanceapp.TeacherDashboardActivity;
 import com.attendanceapp.TeacherSelectBeaconActivity;
-import com.attendanceapp.models.ClassSetup;
+import com.attendanceapp.models.Event;
 import com.attendanceapp.models.RepeatType;
 import com.attendanceapp.models.SelectedDays;
-import com.attendanceapp.models.Teacher;
-import com.attendanceapp.models.TeacherClass;
 import com.attendanceapp.models.User;
 import com.attendanceapp.models.UserRole;
 import com.attendanceapp.utils.AndroidUtils;
-import com.attendanceapp.utils.DataUtils;
 import com.attendanceapp.utils.GPSTracker;
+import com.attendanceapp.utils.StringUtils;
 import com.attendanceapp.utils.UserUtils;
 import com.attendanceapp.utils.WebUtils;
-import com.estimote.sdk.repackaged.gson_v2_3_1.com.google.gson.Gson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
+@SuppressLint("InflateParams")
+@SuppressWarnings("unused")
 public class EventHost_AddEventActivity extends Activity implements View.OnClickListener {
 
     private static final String TAG = EventHost_AddEventActivity.class.getSimpleName();
     public static final String EXTRA_IS_FIRST_TIME = AppConstants.EXTRA_IS_FIRST_TIME;
-    public static final String EXTRA_TEACHER_CLASS_INDEX = "EXTRA_EDITING_CLASS_INDEX";
+    public static final String EXTRA_EDITING_CLASS_INDEX = AppConstants.EXTRA_SELECTED_INDEX;
 
     private static final int REQUEST_SELECT_LOCATION = 230;
     private static final int REQUEST_SELECT_BEACONS = 231;
 
     EditText classNameEditText, districtEditText, codeEditText;
     TextView timeButton, dateButton, dayButton, locationButton, saveButton;
+    ImageView imgHelp;
     LayoutInflater layoutInflater;
     protected SharedPreferences sharedPreferences;
     GPSTracker gpsTracker;
 
-    ClassSetup classSetup = new ClassSetup();
+    Event hostEvent = new Event();
     private User user;
-    protected boolean isFirstTime;
-    protected boolean isAddedNewClass;
-    Gson gson = new Gson();
+    protected boolean firstTime, addedOrEditedClass, classDeleted;
     UserUtils userUtils;
-    @SuppressLint("SimpleDateFormat")
-    private SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
+
     final String[] MONTHS = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    private String teacherClassId;
 
     private boolean isEditClass;
+    private UserRole userRole;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,16 +90,6 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event_host_add_event);
-
-        sharedPreferences = AndroidUtils.getCommonSharedPrefs(getApplicationContext());
-        userUtils = new UserUtils(EventHost_AddEventActivity.this);
-        user = userUtils.getUserFromSharedPrefs();
-
-        layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        gpsTracker = new GPSTracker(EventHost_AddEventActivity.this);
-
-
-        isFirstTime = getIntent().getBooleanExtra(EXTRA_IS_FIRST_TIME, false);
 
         classNameEditText = (EditText) findViewById(R.id.className);
         districtEditText = (EditText) findViewById(R.id.districtField);
@@ -114,6 +99,7 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
         dayButton = (TextView) findViewById(R.id.dayField);
         locationButton = (Button) findViewById(R.id.locationField);
         saveButton = (Button) findViewById(R.id.saveButton);
+        imgHelp = (ImageView) findViewById(R.id.imgHelp);
 
         timeButton.setOnClickListener(this);
         dateButton.setOnClickListener(this);
@@ -121,65 +107,102 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
         locationButton.setOnClickListener(this);
         saveButton.setOnClickListener(this);
 
-        int index = getIntent().getIntExtra(EXTRA_TEACHER_CLASS_INDEX, -1);
 
+        sharedPreferences = AndroidUtils.getCommonSharedPrefs(getApplicationContext());
+        userUtils = new UserUtils(EventHost_AddEventActivity.this);
+        user = userUtils.getUserFromSharedPrefs();
+
+        layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        gpsTracker = new GPSTracker(EventHost_AddEventActivity.this);
+
+        firstTime = getIntent().getBooleanExtra(EXTRA_IS_FIRST_TIME, false);
+
+        Bundle bundle = getIntent().getExtras();
+
+        userRole = UserRole.valueOf(bundle.getInt(AppConstants.EXTRA_USER_ROLE, -1));
+        setRoleBasedProperties(userRole);
+
+        int index = bundle.getInt(EXTRA_EDITING_CLASS_INDEX, -1);
         if (index != -1) {
-            TeacherClass teacherClass = userUtils.getUserWithDataFromSharedPrefs(Teacher.class).getTeacherClassList().get(index);
+            Event teacherClass = user.getEventArrayList().get(index);
             isEditClass = true;
 
-            classSetup.setId(teacherClass.getId());
-            classSetup.setClassName(teacherClass.getClassName());
-            classSetup.setDistrict(teacherClass.getDistrict());
-            classSetup.setCode(teacherClass.getCode());
-            classSetup.setInterval(String.valueOf(teacherClass.getInterval()));
-            classSetup.setBeaconList(teacherClass.getBeaconList());
-            classSetup.setLatitude(teacherClass.getLatitude());
-            classSetup.setLongitude(teacherClass.getLongitude());
-            classSetup.setRepeatType(teacherClass.getRepeatType());
+            teacherClassId = teacherClass.getId();
+            hostEvent.setId(teacherClassId);
+            hostEvent.setName(teacherClass.getName());
+            hostEvent.setDistrict(teacherClass.getDistrict());
+            hostEvent.setCode(teacherClass.getCode());
+            hostEvent.setInterval(teacherClass.getInterval());
+            hostEvent.setBeaconList(teacherClass.getBeaconList());
+            hostEvent.setLatitude(teacherClass.getLatitude());
+            hostEvent.setLongitude(teacherClass.getLongitude());
+            hostEvent.setRepeatType(teacherClass.getRepeatType());
+            hostEvent.setStartTime(teacherClass.getStartTime());
+            hostEvent.setEndTime(teacherClass.getEndTime());
+            hostEvent.setStartDate(teacherClass.getStartDate());
+            hostEvent.setEndDate(teacherClass.getEndDate());
 
-            Calendar calendar = Calendar.getInstance();
-            try {
-                simpleDateFormat.applyPattern("HH:mm:ss");
 
-                calendar.setTime(simpleDateFormat.parse(teacherClass.getStartTime()));
-                classSetup.setStartTime(calendar);
+            classNameEditText.setText(hostEvent.getName());
 
-                calendar.setTime(simpleDateFormat.parse(teacherClass.getEndTime()));
-                classSetup.setEndTime(calendar);
+            timeButton.setText(StringUtils.getTimeStringFromCalender(hostEvent.getStartTime()));
+            timeButton.setText(timeButton.getText() + " - " + StringUtils.getTimeStringFromCalender(hostEvent.getEndTime()));
 
-                simpleDateFormat.applyPattern("yyyy-mm-dd");
+            dateButton.setText(StringUtils.getDateStringFromCalender(hostEvent.getStartDate()));
+            dateButton.setText(dateButton.getText() + " - " + StringUtils.getDateStringFromCalender(hostEvent.getEndDate()));
 
-                calendar.setTime(simpleDateFormat.parse(teacherClass.getStartDate()));
-                classSetup.setStartDate(calendar);
+            ((TextView) findViewById(R.id.txtTitle)).setText(teacherClass.getUniqueCode());
+            dayButton.setText(hostEvent.getRepeatType().toString());
+            districtEditText.setText(hostEvent.getDistrict());
+            codeEditText.setText(hostEvent.getCode());
 
-                calendar.setTime(simpleDateFormat.parse(teacherClass.getEndDate()));
-                classSetup.setEndDate(calendar);
-
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-
-            classNameEditText.setText(classSetup.getClassName());
-            timeButton.setText(teacherClass.getStartTime() + " - " + teacherClass.getEndTime());
-
-            calendar = classSetup.getStartDate();
-            dateButton.setText("" + MONTHS[calendar.get(Calendar.MONTH) + 1] + " " + calendar.get(Calendar.DAY_OF_MONTH) + ", " + calendar.get(Calendar.YEAR));
-            calendar = classSetup.getEndDate();
-            dateButton.setText(dateButton.getText() + " - " + MONTHS[calendar.get(Calendar.MONTH) + 1] + " " + calendar.get(Calendar.DAY_OF_MONTH) + ", " + calendar.get(Calendar.YEAR));
-
-            ((TextView) findViewById(R.id.txtTitle)).setText(teacherClass.getClassCode());
-            dayButton.setText(classSetup.getRepeatType().toString());
-            districtEditText.setText(classSetup.getDistrict());
-            codeEditText.setText(classSetup.getCode());
-
-            double latitude = classSetup.getLatitude(), longitude = classSetup.getLongitude();
+            double latitude = hostEvent.getLatitude(), longitude = hostEvent.getLongitude();
             if (latitude != 0 && longitude != 0) {
                 Address address = userUtils.getAddress(latitude, longitude);
                 locationButton.setText(userUtils.getAddressString(address));
             }
+
+            // delete button functionality
+            imgHelp.setImageResource(R.drawable.delete);
+            imgHelp.setOnClickListener(this);
         }
 
     }
+
+    String title, name, code;
+
+    private void setRoleBasedProperties(UserRole userRole) {
+
+        if (userRole != null) {
+
+            if (userRole == UserRole.Teacher) {
+                title = "Class Setup";
+                name = "Class name";
+
+            } else if (userRole == UserRole.EventHost) {
+                title = "Event Setup";
+                name = "Event name";
+                code = "Event Code";
+
+            } else if (userRole == UserRole.Manager) {
+                title = "Meeting Place";
+                name = "Meeting Place";
+                code = "Company Code";
+
+
+//                 hide extra fields
+//                timeButton.setVisibility(View.GONE);
+//                dateButton.setVisibility(View.GONE);
+                districtEditText.setVisibility(View.GONE);
+            }
+
+
+            ((TextView) findViewById(R.id.txtTitle)).setText(title);
+            classNameEditText.setHint(name);
+            codeEditText.setHint(code);
+        }
+    }
+
 
     @Override
     public void onClick(View v) {
@@ -199,8 +222,98 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
             case R.id.saveButton:
                 processSaveButton();
                 break;
+            case R.id.imgHelp:
+                deleteClass();
         }
     }
+
+
+    private void deleteClass() {
+
+        new AlertDialog.Builder(EventHost_AddEventActivity.this)
+                .setMessage("Delete meeting!")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+
+
+                        final String url = AppConstants.URL_DELETE_CLASS_BY_TEACHER;
+
+                        new AsyncTask<Void, Void, String>() {
+                            ProgressDialog progressDialog = new ProgressDialog(EventHost_AddEventActivity.this);
+
+                            @Override
+                            protected void onPreExecute() {
+                                super.onPreExecute();
+                                progressDialog.setMessage("Please wait...");
+                                progressDialog.setCancelable(false);
+                                progressDialog.show();
+                            }
+
+                            @Override
+                            protected String doInBackground(Void... params) {
+                                String result = null;
+
+                                HashMap<String, String> map = new HashMap<>();
+                                map.put("class_id", teacherClassId);
+
+                                try {
+                                    result = new WebUtils().post(url, map);
+
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                return result;
+                            }
+
+                            @Override
+                            protected void onPostExecute(String s) {
+                                progressDialog.dismiss();
+                                JSONObject jObject;
+                                if (s == null) {
+                                    makeToast("Error in deleting!");
+
+                                } else {
+                                    try {
+                                        jObject = new JSONObject(s);
+
+                                        // check if result contains Error
+                                        if (jObject.has("Error")) {
+                                            makeToast(jObject.getString("Error"));
+
+                                        } else if (jObject.has("Message")) {
+                                            makeToast("Deleted successfully!");
+
+                                            classDeleted = true;
+                                            onBackPressed();
+
+                                        }
+
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                        Log.e(TAG, "Error in parsing data: " + s);
+                                        Log.e(TAG, e.getMessage());
+                                    }
+                                }
+
+                            }
+                        }.execute();
+
+
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                        dialogInterface.cancel();
+                    }
+                })
+                .create()
+                .show();
+
+    }
+
 
     private void processTimeButton() {
 
@@ -215,18 +328,9 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
             public void onClick(DialogInterface dialog, int which) {
                 int hourOfDay = timePicker.getCurrentHour();
                 int minute = timePicker.getCurrentMinute();
-                String state = "am";
-                if (hourOfDay > 12) {
-                    hourOfDay -= 12;
-                    state = "pm";
-                } else if (hourOfDay == 0) {
-                    hourOfDay = 12;
-                } else if (hourOfDay == 12) {
-                    state = "pm";
-                }
-                String minuteString = String.valueOf(minute).length() < 2 ? "0" + minute : "" + minute;
-                timeButton.setText("" + hourOfDay + ":" + minuteString + " " + state);
-                classSetup.setStartTime(getCalenderFromTimePicker(timePicker));
+
+                timeButton.setText(StringUtils.getTimeStringFromHourMinute(hourOfDay, minute));
+                hostEvent.setStartTime(getCalenderFromTimePicker(timePicker));
                 getTimeFromUser("End Time");
             }
         });
@@ -249,10 +353,8 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
                 int monthOfYear = datePicker.getMonth();
                 int dayOfMonth = datePicker.getDayOfMonth();
 
-//                dateButton.setText("" + MONTHS[monthOfYear] + ":" + dayOfMonth + ":" + year);
-//                         Jun 1, 2015
                 dateButton.setText("" + MONTHS[monthOfYear] + " " + dayOfMonth + ", " + year);
-                classSetup.setStartDate(getDateFromDatePicker(datePicker));
+                hostEvent.setStartDate(getDateFromDatePicker(datePicker));
 
                 getDateFromUser("Select End Date");
 
@@ -263,10 +365,8 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
                         int year = datePicker.getYear();
                         int monthOfYear = datePicker.getMonth();
                         int dayOfMonth = datePicker.getDayOfMonth();
-//                        dateButton.setText(dateButton.getText() + " - " + MONTHS[monthOfYear] + ":" + dayOfMonth + ":" + year);
-//                         Jun 1, 2015
                         dateButton.setText(dateButton.getText() + " - " + MONTHS[monthOfYear] + " " + dayOfMonth + ", " + year);
-                        classSetup.setEndDate(getDateFromDatePicker(datePicker));
+                        hostEvent.setEndDate(getDateFromDatePicker(datePicker));
                     }
                 });
             }
@@ -330,10 +430,10 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
                 for (Integer integer1 : selectedDaysSet) {
                     SelectedDays selected_days = SelectedDays.values()[integer1];
                     System.out.println("selected_days = " + selected_days);
-                    classSetup.getRepeatDays().add(SelectedDays.values()[integer1]);
+                    hostEvent.getRepeatDays().add(SelectedDays.values()[integer1]);
                 }
                 if (selectedDaysSet.isEmpty()) {
-                    classSetup.getRepeatDays().clear();
+                    hostEvent.getRepeatDays().clear();
                 }
             }
         };
@@ -356,7 +456,7 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
         days.setAdapter(daysAdapter);
 
         // save first position by default
-        classSetup.setRepeatType(RepeatType.DAILY);
+        hostEvent.setRepeatType(RepeatType.DAILY);
 
 
         final AdapterView.OnItemSelectedListener spinnerItemSelectedListener = new AdapterView.OnItemSelectedListener() {
@@ -365,7 +465,7 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
                 thirtyDaysLayout.setVisibility(View.GONE);
                 sevenDaysLayout.setVisibility(View.GONE);
 
-                classSetup.setRepeatType(RepeatType.values()[position]);
+                hostEvent.setRepeatType(RepeatType.values()[position]);
 
                 if (position == 0 || position == 4 || position == 5 || position == 6) {
                     thirtyDaysLayout.setVisibility(View.VISIBLE);
@@ -393,81 +493,10 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                classSetup.setRepeatType(null);
+                hostEvent.setRepeatType(null);
             }
         };
         spinner.setOnItemSelectedListener(spinnerItemSelectedListener);
-
-//        class GridAdapter extends BaseAdapter {
-//            Context context;
-//            List<Integer> integerList;
-//
-//            public GridAdapter(Context context, List<Integer> integerList) {
-//                this.context = context;
-//                this.integerList = integerList;
-//            }
-//
-//            @Override
-//            public int getCount() {
-//                return integerList.size();
-//            }
-//
-//            @Override
-//            public Object getItem(int position) {
-//                return integerList.get(position);
-//            }
-//
-//            @Override
-//            public long getItemId(int position) {
-//                return position;
-//            }
-//
-//            class ViewHolder {
-//                public TextView textView;
-//            }
-//
-//            @Override
-//            public View getView(int position, View convertView, ViewGroup parent) {
-//                final ViewHolder viewHolder;
-//                View view = convertView;
-//
-//                if (view == null) {
-//                    viewHolder = new ViewHolder();
-//                    view = layoutInflater.inflate(R.layout.day_picker, null, false);
-//                    viewHolder.textView = (TextView) view.findViewById(R.id.textView);
-//
-//                } else {
-//                    viewHolder = (ViewHolder) view.getTag();
-//                }
-//                viewHolder.textView.setText("" + integerList.get(position));
-//                view.setTag(viewHolder);
-//
-//                return view;
-//            }
-//        }
-//        List<Integer> integers = new ArrayList<>();
-//        for (int i = 1; i <= 30; i++) {
-//            integers.add(i);
-//        }
-
-        //dateGrid.setAdapter(new GridAdapter(EventHost_AddEventActivity.this, integers));
-
-//        final TreeSet<Integer> selectedDates = new TreeSet<>();
-
-//        dateGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                Integer integer = position + 1;
-//                if (selectedDates.contains(integer)) {
-//                    selectedDates.remove(integer);
-//                } else {
-//                    selectedDates.add(integer);
-//                }
-//                selectedDatesText.setText(selectedDates.toString());
-//
-//                classSetup.setRepeatDates(selectedDates);
-//            }
-//        });
 
         AlertDialog.Builder builder = new AlertDialog.Builder(EventHost_AddEventActivity.this);
         builder.setTitle("Select Days");
@@ -479,7 +508,7 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
                 dayButton.setText(selectedOption);
 
                 String interval = days.getSelectedItem().toString();
-                classSetup.setInterval(interval);
+                hostEvent.setInterval(Integer.valueOf(interval));
 
                 dialog.dismiss();
                 dialog.cancel();
@@ -493,12 +522,11 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
         Button currentLocation = (Button) view.findViewById(R.id.currentLocation);
         Button customLocation = (Button) view.findViewById(R.id.customLocation);
         final Button addBeacons = (Button) view.findViewById(R.id.addBeacons);
-//        final LinearLayout customLocationBox = (LinearLayout) view.findViewById(R.id.customLocationBox);
 
         final AlertDialog alertDialog = new AlertDialog.Builder(EventHost_AddEventActivity.this).setView(view).create();
         alertDialog.show();
 
-        currentLocation.setOnClickListener(new OnClickListener() {
+        currentLocation.setOnClickListener(new View.OnClickListener() {
             double longitude = 0, latitude = 0;
 
             @Override
@@ -508,11 +536,12 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
                     latitude = location.getLatitude();
                     longitude = location.getLongitude();
 
-                    classSetup.setLatitude(latitude);
-                    classSetup.setLongitude(longitude);
+                    hostEvent.setLatitude(latitude);
+                    hostEvent.setLongitude(longitude);
 
                     Address address = userUtils.getAddress(latitude, longitude);
                     locationButton.setText(userUtils.getAddressString(address));
+
                 } else {
                     Toast.makeText(getApplicationContext(), "Please check location services", Toast.LENGTH_LONG).show();
                 }
@@ -521,10 +550,9 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
             }
         });
 
-        customLocation.setOnClickListener(new OnClickListener() {
+        customLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //customLocationBox.setVisibility(customLocationBox.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
                 alertDialog.dismiss();
                 alertDialog.cancel();
                 startActivityForResult(new Intent(EventHost_AddEventActivity.this, SelectLocationActivity.class), REQUEST_SELECT_LOCATION);
@@ -532,15 +560,13 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
         });
 
 
-        addBeacons.setOnClickListener(new OnClickListener() {
+        addBeacons.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                Toast.makeText(getApplicationContext(), "Add Beacons from website", Toast.LENGTH_SHORT).show();
                 alertDialog.dismiss();
                 alertDialog.cancel();
-//                startActivityForResult(new Intent(EventHost_AddEventActivity.this, TeacherSelectBeaconActivity.class), REQUEST_SELECT_BEACONS);
                 Intent intent = new Intent(EventHost_AddEventActivity.this, ListBeaconsActivity.class);
-                intent.putParcelableArrayListExtra(ListBeaconsActivity.EXTRA_BEACONS, classSetup.getBeaconList());
+                intent.putParcelableArrayListExtra(ListBeaconsActivity.EXTRA_BEACONS, hostEvent.getBeaconList());
 
                 startActivityForResult(intent, REQUEST_SELECT_BEACONS);
             }
@@ -549,24 +575,30 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
 
     private void processSaveButton() {
         // get data from all fields
-        classSetup.setClassName(classNameEditText.getText().toString().trim());
-        classSetup.setDistrict(districtEditText.getText().toString().trim());
-        classSetup.setCode(codeEditText.getText().toString().trim());
+        hostEvent.setName(classNameEditText.getText().toString().trim());
+        hostEvent.setDistrict(districtEditText.getText().toString().trim());
+        hostEvent.setCode(codeEditText.getText().toString().trim());
 
         String errorMessage = null;
 
         // validate all required fields
-        if (classSetup.getClassName() == null || classSetup.getClassName().length() < 1) {
-            errorMessage = "Please enter correct class name";
-        } else if (classSetup.getStartTime() == null || classSetup.getEndTime() == null) {
-            errorMessage = "Please select start and end time";
-        } else if (classSetup.getStartDate() == null || classSetup.getEndDate() == null) {
-            errorMessage = "Please select start and end date";
-        } else if (classSetup.getRepeatType() == null) {
-            errorMessage = "Please select class repeat type";
-        }/* else if ((classSetup.getLatitude() == 0.0d || classSetup.getLongitude() == 0.0d) && "".equals(classSetup.getBeacons())) {
+        if (hostEvent.getName() == null || hostEvent.getName().length() < 1) {
+            errorMessage = "Please enter name";
+        } else if (hostEvent.getRepeatType() == null) {
+            errorMessage = "Please select repeat type";
+        }/* else if ((hostEvent.getLatitude() == 0.0d || hostEvent.getLongitude() == 0.0d)
+                && "".equals(hostEvent.getBeaconsJsonString())) {
             errorMessage = "Please select location";
         }*/
+
+//        if (userRole != UserRole.Manager) {
+        if ((hostEvent.getStartTime() == null || hostEvent.getEndTime() == null)) {
+            errorMessage = "Please select start and end time";
+        } else if (hostEvent.getStartDate() == null || hostEvent.getEndDate() == null) {
+            errorMessage = "Please select start and end date";
+        }
+//        }
+
 //
 //        if (errorMessage != null) {
 //            makeToast(errorMessage);
@@ -574,18 +606,18 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
 //        }
 
         // validate for correct values
-//                if (classSetup.getStartTime().after(classSetup.getEndTime()) || classSetup.getStartTime().equals(classSetup.getEndTime())) {
+//                if (classEventCompany.getStartTime().after(classEventCompany.getEndTime()) || classEventCompany.getStartTime().equals(classEventCompany.getEndTime())) {
 //                    errorMessage = "Start time should be less than end time";
-//                } else if (classSetup.getStartDate().get(Calendar.MONTH) < Calendar.getInstance().get(Calendar.MONTH)
-//                        || classSetup.getStartDate().get(Calendar.YEAR) < Calendar.getInstance().get(Calendar.YEAR)
-//                        || classSetup.getStartDate().get(Calendar.DATE) < Calendar.getInstance().get(Calendar.DATE)) {
+//                } else if (classEventCompany.getStartDate().get(Calendar.MONTH) < Calendar.getInstance().get(Calendar.MONTH)
+//                        || classEventCompany.getStartDate().get(Calendar.YEAR) < Calendar.getInstance().get(Calendar.YEAR)
+//                        || classEventCompany.getStartDate().get(Calendar.DATE) < Calendar.getInstance().get(Calendar.DATE)) {
 //                    errorMessage = "Start date should not be before than current date";
-//                } else if (classSetup.getStartDate().equals(classSetup.getEndDate()) || classSetup.getStartDate().after(classSetup.getEndDate())) {
+//                } else if (classEventCompany.getStartDate().equals(classEventCompany.getEndDate()) || classEventCompany.getStartDate().after(classEventCompany.getEndDate())) {
 //                    errorMessage = "Start date should be less than end date";
 //                } else
-//        if (classSetup.getRepeatType().equals(RepeatType.REPEAT_DAY) && classSetup.getRepeatDays().isEmpty()) {
+//        if (classEventCompany.getRepeatType().equals(RepeatType.REPEAT_DAY) && classEventCompany.getRepeatDays().isEmpty()) {
 //            errorMessage = "Please select repeat days";
-//        } else if (classSetup.getRepeatType().equals(RepeatType.REPEAT_DATE) && classSetup.getRepeatDates().isEmpty()) {
+//        } else if (classEventCompany.getRepeatType().equals(RepeatType.REPEAT_DATE) && classEventCompany.getRepeatDates().isEmpty()) {
 //            errorMessage = "Please select repeat dates";
 //        }
 
@@ -593,53 +625,79 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
         if (errorMessage != null) {
             makeToast(errorMessage);
         } else {
-            //Log.i(TAG, classSetup.toString());
+            //Log.i(TAG, classEventCompany.toString());
 
             String formatForTime = "%d:%d";
-            String formatForDate = "%d-%d-%d";
+            String formatForDate = "%d/%d/%d";
             Calendar calendar;
 
             Map<String, String> keysAndValues = new HashMap<>();
 
-            if (isEditClass) {
-                keysAndValues.put("id", classSetup.getId());
-            }
             keysAndValues.put("user_id", user.getUserId());
             keysAndValues.put("status", "1");
-            keysAndValues.put("eventName", classSetup.getClassName());
-            calendar = classSetup.getStartTime();
-            keysAndValues.put("startTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
-            calendar = classSetup.getEndTime();
-            keysAndValues.put("endTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
-            calendar = classSetup.getStartDate();
-            keysAndValues.put("startDate", String.format(formatForDate, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH)));
-            calendar = classSetup.getEndDate();
-            keysAndValues.put("endDate", String.format(formatForDate, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH)));
-            keysAndValues.put("latitude", String.valueOf(classSetup.getLatitude()));
-            keysAndValues.put("longitude", String.valueOf(classSetup.getLongitude()));
-            keysAndValues.put("repeatType", classSetup.getRepeatType().toString());
-            keysAndValues.put("repeatDays", classSetup.getRepeatDays().toString());
-            keysAndValues.put("interval", classSetup.getInterval());
-            keysAndValues.put("beacon_id", classSetup.getBeacons());
 
-            if (classSetup.getRepeatType().equals(RepeatType.WEEKLY)) {
-                String s = classSetup.getRepeatDays().toString();
+            if (isEditClass) {
+                keysAndValues.put("id", hostEvent.getId());
+            }
+
+            if (userRole == UserRole.Manager) {
+                keysAndValues.put("meetingPlace", hostEvent.getName());
+            } else if (userRole == UserRole.EventHost) {
+                keysAndValues.put("eventName", hostEvent.getName());
+            } else {
+                keysAndValues.put("className", hostEvent.getName());
+            }
+
+//            if (userRole != UserRole.Manager) {
+            calendar = hostEvent.getStartTime();
+            keysAndValues.put("startTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
+            calendar = hostEvent.getEndTime();
+            keysAndValues.put("endTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
+            calendar = hostEvent.getStartDate();
+            keysAndValues.put("startDate", String.format(formatForDate, calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR)));
+            calendar = hostEvent.getEndDate();
+            keysAndValues.put("endDate", String.format(formatForDate, calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR)));
+//            }
+
+            keysAndValues.put("latitude", String.valueOf(hostEvent.getLatitude()));
+            keysAndValues.put("longitude", String.valueOf(hostEvent.getLongitude()));
+            keysAndValues.put("repeatType", hostEvent.getRepeatType().toString());
+            keysAndValues.put("repeatDays", hostEvent.getRepeatDays().toString());
+            keysAndValues.put("interval", String.valueOf(hostEvent.getInterval()));
+            keysAndValues.put("beacon_id", hostEvent.getBeaconsJsonString());
+
+            if (hostEvent.getRepeatType().equals(RepeatType.WEEKLY)) {
+                String s = hostEvent.getRepeatDays().toString();
                 s = s.substring(1, s.length() - 1);
                 keysAndValues.put("repeatDays", s);
             }
 
-            if (classSetup.getDistrict() != null) {
-                keysAndValues.put("district", classSetup.getDistrict());
-            }
+            if (userRole == UserRole.Manager) {
+                keysAndValues.put("companyCode", hostEvent.getCode());
 
-            if (classSetup.getCode() != null) {
-                keysAndValues.put("eventCode", classSetup.getCode());
+            } else {
+                if (hostEvent.getDistrict() != null) {
+                    keysAndValues.put("district", hostEvent.getDistrict());
+                }
+
+                if (hostEvent.getCode() != null) {
+                    keysAndValues.put("code", hostEvent.getCode());
+                }
             }
 
             Log.i(TAG, keysAndValues.toString());
             // user_id,className,startTime,endTime,startDate,endDate,repeatType,repeatDays(if values of repeatType is WEEKLY),interval,district,code,latitude,longitude,status
             // finally upload data to server using async task
-            UploadDataAsync(AppConstants.KR_ADD_EVENT_BY_HOST, keysAndValues);
+
+
+            if (userRole == UserRole.Manager) {
+                UploadDataAsync(AppConstants.URL_CREATE_COMPANY, keysAndValues);
+            } else if (userRole == UserRole.EventHost) {
+                UploadDataAsync(AppConstants.URL_CREATE_EVENT, keysAndValues);
+            } else {
+                UploadDataAsync(AppConstants.URL_CREATE_CLASS, keysAndValues);
+            }
+
         }
     }
 
@@ -682,8 +740,8 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
                             makeToast(jObject.getString("Error"));
 
                         } else {
-                            makeToast("Class is saved!");
-                            isAddedNewClass = true;
+                            makeToast("Saved successfully!");
+                            addedOrEditedClass = true;
                             onBackPressed();
                         }
 
@@ -713,18 +771,9 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
             public void onClick(DialogInterface dialog, int which) {
                 int hourOfDay = timePicker.getCurrentHour();
                 int minute = timePicker.getCurrentMinute();
-                String state = "am";
-                if (hourOfDay > 12) {
-                    hourOfDay -= 12;
-                    state = "pm";
-                } else if (hourOfDay == 0) {
-                    hourOfDay = 12;
-                } else if (hourOfDay == 12) {
-                    state = "pm";
-                }
-                String minuteString = String.valueOf(minute).length() < 2 ? "0" + minute : "" + minute;
-                timeButton.setText(timeButton.getText() + "  -  " + hourOfDay + ":" + minuteString + " " + state);
-                classSetup.setEndTime(getCalenderFromTimePicker(timePicker));
+
+                timeButton.setText(timeButton.getText() + "  -  " + StringUtils.getTimeStringFromHourMinute(hourOfDay, minute));
+                hostEvent.setEndTime(getCalenderFromTimePicker(timePicker));
 
             }
         });
@@ -745,7 +794,7 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
                 int monthOfYear = datePicker.getMonth();
                 int dayOfMonth = datePicker.getDayOfMonth();
                 dateButton.setText(dateButton.getText() + " - " + MONTHS[monthOfYear] + " " + dayOfMonth + ", " + year);
-                classSetup.setEndDate(getDateFromDatePicker(datePicker));
+                hostEvent.setEndDate(getDateFromDatePicker(datePicker));
             }
         });
         builder.show();
@@ -781,80 +830,35 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
                 double lat = data.getDoubleExtra(SelectLocationActivity.EXTRA_LATITUDE, 0.0);
                 double lng = data.getDoubleExtra(SelectLocationActivity.EXTRA_LONGITUDE, 0.0);
 
-                classSetup.setLatitude(lat);
-                classSetup.setLongitude(lng);
+                hostEvent.setLatitude(lat);
+                hostEvent.setLongitude(lng);
 
                 locationButton.setText(userUtils.getAddressString(userUtils.getAddress(lat, lng)));
             }
         } else if (requestCode == REQUEST_SELECT_BEACONS) {
             if (resultCode == RESULT_OK) {
-                classSetup.setBeacons(data.getStringExtra(TeacherSelectBeaconActivity.RESPONSE_SELECTED_BEACONS));
+                hostEvent.setBeaconsJsonString(data.getStringExtra(TeacherSelectBeaconActivity.RESPONSE_SELECTED_BEACONS));
             } else {
-                classSetup.setBeacons("");
+                hostEvent.setBeaconsJsonString("");
             }
         }
     }
 
     @Override
     public void onBackPressed() {
-        if (isFirstTime || isAddedNewClass) {
-            updateDataAsync();
-            return;
-        }
-        super.onBackPressed();
-    }
-
-    protected void openActivity(Class aClass) {
-        startActivity(new Intent(EventHost_AddEventActivity.this, aClass));
-        finish();
-    }
-
-    private void updateDataAsync() {
-        new AsyncTask<Void, Void, String>() {
-            private ProgressDialog progressDialog = new ProgressDialog(EventHost_AddEventActivity.this);
-
-            @Override
-            protected void onPreExecute() {
-                progressDialog.setMessage("Please wait...");
-                progressDialog.setCancelable(false);
-                progressDialog.show();
-            }
-
-            @Override
-            protected String doInBackground(Void... params) {
-                HashMap<String, String> hm = new HashMap<>();
-                hm.put("id", user.getUserId());
-                hm.put("role", String.valueOf(UserRole.Teacher.getRole()));
-                try {
-                    return new WebUtils().post(AppConstants.URL_GET_DATA_BY_ID, hm);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(String result) {
-                progressDialog.dismiss();
-                if (result != null) {
-
-                    Teacher teacher = new Teacher(user);
-                    List<TeacherClass> teacherClasses = DataUtils.getTeacherClassListFromJsonString(result);
-
-                    if (teacher.getTeacherClassList().size() != teacherClasses.size()) {
-
-                        teacher.getTeacherClassList().clear();
-                        teacher.getTeacherClassList().addAll(teacherClasses);
-
-                        userUtils.saveUserWithDataToSharedPrefs(teacher, Teacher.class);
-
-                    }
-                }
-                openActivity(EventHost_DashboardActivity.class);
+        if (firstTime) {
+            if (userRole == UserRole.Manager) {
+                startActivity(new Intent(this, Manager_DashboardActivity.class));
                 finish();
             }
-        }.execute();
 
+        } else if (addedOrEditedClass || classDeleted) {
+            setResult(RESULT_OK);
+            finish();
+
+        } else {
+            super.onBackPressed();
+        }
     }
 
 }
