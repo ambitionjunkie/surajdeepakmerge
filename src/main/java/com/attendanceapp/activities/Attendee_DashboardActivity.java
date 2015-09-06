@@ -24,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.attendanceapp.AppConstants;
+import com.attendanceapp.activities.Attendee_NotificationActivity;
 import com.attendanceapp.OnSwipeTouchListener;
 import com.attendanceapp.R;
 import com.attendanceapp.StudentAddClassActivity;
@@ -232,7 +233,7 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
         sharedPreferences.edit().putInt(user.getUserId() + studentClass.getUniqueCode(), 0).apply();
         setNotificationBadge(mViewPager.getCurrentItem());
 
-        Intent intent = new Intent(Attendee_DashboardActivity.this, StudentNotificationActivity.class);
+        Intent intent = new Intent(Attendee_DashboardActivity.this, Attendee_NotificationActivity.class);
         intent.putExtra(StudentNotificationActivity.EXTRA_STUDENT_CLASS, studentClass);
         startActivity(intent);
     }

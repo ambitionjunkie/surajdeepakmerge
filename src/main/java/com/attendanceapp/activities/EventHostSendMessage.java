@@ -205,6 +205,10 @@ public class EventHostSendMessage extends Activity implements View.OnClickListen
                 if (result != null) {
                     classMessageArrayList.add(new ClassMessage(message, new Date().toString()));
                     listAdapter.notifyDataSetChanged();
+
+                    if (classMessageArrayList.size() > 0) {
+                        findViewById(R.id.noNotifications).setVisibility(View.INVISIBLE);
+                    }
                 }
             }
         }.execute();
