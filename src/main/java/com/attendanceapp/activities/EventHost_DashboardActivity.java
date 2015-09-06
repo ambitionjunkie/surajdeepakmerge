@@ -575,10 +575,10 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
 
                     } else {
                         Intent intent;
-                        intent = new Intent(EventHost_DashboardActivity.this, CommonAttendanceTakenActivity.class);
-                        intent.putExtra(CommonAttendanceTakenActivity.EXTRA_SELECTED_CLASS_INDEX, mViewPager.getCurrentItem());
+                        intent = new Intent(EventHost_DashboardActivity.this, EventHost_AttendanceTakenActivity.class);
+                        intent.putExtra(EventHost_AttendanceTakenActivity.EXTRA_SELECTED_CLASS_INDEX, mViewPager.getCurrentItem());
                         intent.putExtra(AppConstants.EXTRA_USER_ROLE, UserRole.EventHost.getRole());
-                        intent.putExtra(CommonAttendanceTakenActivity.EXTRA_ATTENDANCE_DATA, result);
+                        intent.putExtra(EventHost_AttendanceTakenActivity.EXTRA_ATTENDANCE_DATA, result);
 
                         startActivity(intent);
                     }
