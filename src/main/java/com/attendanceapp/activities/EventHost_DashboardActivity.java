@@ -23,6 +23,7 @@ import android.widget.Toast;
 
 import com.attendanceapp.Absent;
 import com.attendanceapp.AppConstants;
+import com.attendanceapp.activities.EventHost_Absent;
 import com.attendanceapp.OnSwipeTouchListener;
 import com.attendanceapp.R;
 import com.attendanceapp.TeacherSendMessageToOneClass;
@@ -272,10 +273,12 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
                             makeToast(object.getString("Error"));
                             return;
                         }
-                        Intent intent = new Intent(EventHost_DashboardActivity.this, Absent.class);
-                        intent.putExtra(Absent.EXTRA_ATTENDANCE_DATA, result);
-                        intent.putExtra(Absent.EXTRA_TITLE, teacherClass.getName());
-                        intent.putExtra(Absent.EXTRA_LIST_OPTION, Absent.SHOW_NAME_DATE);
+                        Intent intent = new Intent(EventHost_DashboardActivity.this, EventHost_Absent.class);
+                        intent.putExtra(EventHost_Absent.EXTRA_ATTENDANCE_DATA, result);
+                        intent.putExtra(EventHost_Absent.EXTRA_TITLE, teacherClass.getName());
+                        intent.putExtra(EventHost_Absent.SHOW_EDIT_BUTTON, true);
+                        intent.putExtra(EventHost_Absent.EXTRA_CLASS_ID, classId);
+                        intent.putExtra(EventHost_Absent.EXTRA_LIST_OPTION, EventHost_Absent.SHOW_NAME_DATE);
                         startActivity(intent);
 
                     } catch (JSONException e) {
