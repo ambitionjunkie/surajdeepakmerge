@@ -250,11 +250,11 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
             protected String doInBackground(Void... params) {
                 HashMap<String, String> hm = new HashMap<>();
                 hm.put("user_id", user.getUserId());
-                hm.put("class_id", classId);
+                hm.put("event_id", classId);
                 hm.put("role", String.valueOf(UserRole.EventHost.getRole()));
 
                 try {
-                    return new WebUtils().post(AppConstants.URL_SHOW_ATTENDANCE_CURRENT_LOCATION, hm);
+                    return new WebUtils().post(AppConstants.URL_EVENTHOST_ATTENDANCE_CURRENT_LOCATION, hm);
                 } catch (IOException e) {
                     e.printStackTrace();
                     return null;
@@ -298,9 +298,9 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
             return;
         }
 
-        Intent intent = new Intent(EventHost_DashboardActivity.this, ReportsActivity.class);
-        intent.putExtra(ReportsActivity.EXTRA_CLASS_INDEX, mViewPager.getCurrentItem());
-        intent.putExtra(ReportsActivity.EXTRA_TYPE,"eventhost");
+        Intent intent = new Intent(EventHost_DashboardActivity.this, EventHost_ReportsActivity.class);
+        intent.putExtra(EventHost_ReportsActivity.EXTRA_CLASS_INDEX, mViewPager.getCurrentItem());
+        intent.putExtra(EventHost_ReportsActivity.EXTRA_TYPE,"eventhost");
         System.out.println("This is current item>>" + mViewPager.getCurrentItem());
         startActivity(intent);
 

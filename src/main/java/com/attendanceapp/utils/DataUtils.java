@@ -506,6 +506,25 @@ public final class DataUtils {
                         attendance.setStudentName(jsonObject2.getString("student_email").substring(0, jsonObject2.getString("student_email").indexOf("@")));
                         attendance.setStudentImage(jsonObject2.getString("image"));
                     }*/
+                }else if(index.has("EventeeAttendance")){
+                    JSONObject jsonObject1 = index.getJSONObject("EventeeAttendance");
+
+                    attendance.setId(jsonObject1.getString("id"));
+                    attendance.setTeacherId(jsonObject1.getString("user_id"));
+                    attendance.setStudentId(jsonObject1.getString("eventee_id"));
+                    attendance.setClassId(jsonObject1.getString("event_id"));
+                    attendance.setClassCode(jsonObject1.getString("eventCode"));
+                    attendance.setIsPresent("p".equalsIgnoreCase(jsonObject1.getString("attend")));
+                    attendance.setCreateDate(jsonObject1.getString("created"));
+
+                   if (index.has("Eventee")) {
+                        JSONObject jsonObject2 = index.getJSONObject("Eventee");
+                        attendance.setParentEmail(jsonObject2.getString("parent_email"));
+                        attendance.setStudentEmail(jsonObject2.getString("eventee_email"));
+//                attendance.setUsername(jsonObject2.getString("student_name"));
+                        attendance.setStudentName(jsonObject2.getString("eventee_email").substring(0, jsonObject2.getString("eventee_email").indexOf("@")));
+                        attendance.setStudentImage(jsonObject2.getString("image"));
+                    }
                 }
                 list.add(attendance);
             }
@@ -673,23 +692,44 @@ public final class DataUtils {
                 Attendance attendance = new Attendance();
                 JSONObject index = dataArray.getJSONObject(i);
 
-                JSONObject attendanceObject = index.getJSONObject("StudentAttendance");
+                if (index.has("StudentAttendance")) {
+                    JSONObject attendanceObject = index.getJSONObject("StudentAttendance");
 
-                attendance.setTeacherId(attendanceObject.getString("user_id"));
-                attendance.setStudentId(attendanceObject.getString("student_id"));
-                attendance.setClassId(attendanceObject.getString("teacher_id"));
-                attendance.setClassCode(attendanceObject.getString("classCode"));
-                attendance.setIsPresent("p".equalsIgnoreCase(attendanceObject.getString("attend")));
-                attendance.setCreateDate(attendanceObject.getString("created"));
+                    attendance.setTeacherId(attendanceObject.getString("user_id"));
+                    attendance.setStudentId(attendanceObject.getString("student_id"));
+                    attendance.setClassId(attendanceObject.getString("teacher_id"));
+                    attendance.setClassCode(attendanceObject.getString("classCode"));
+                    attendance.setIsPresent("p".equalsIgnoreCase(attendanceObject.getString("attend")));
+                    attendance.setCreateDate(attendanceObject.getString("created"));
 
-                JSONObject studentObject = index.getJSONObject("Student");
-                String studentEmail = studentObject.getString("student_email");
-                attendance.setStudentEmail(studentEmail);
+                    JSONObject studentObject = index.getJSONObject("Student");
+                    String studentEmail = studentObject.getString("student_email");
+                    attendance.setStudentEmail(studentEmail);
 
-                List<Attendance> list = map.containsKey(studentEmail) ? map.get(studentEmail) : new ArrayList<Attendance>();
-                list.add(attendance);
+                    List<Attendance> list = map.containsKey(studentEmail) ? map.get(studentEmail) : new ArrayList<Attendance>();
+                    list.add(attendance);
 
-                map.put(studentEmail, list);
+                    map.put(studentEmail, list);
+                }else if (index.has("EventeeAttendance"))
+                {
+                    JSONObject attendanceObject = index.getJSONObject("EventeeAttendance");
+
+                    attendance.setTeacherId(attendanceObject.getString("user_id"));
+                    attendance.setStudentId(attendanceObject.getString("eventee_id"));
+                    attendance.setClassId(attendanceObject.getString("event_id"));
+                    attendance.setClassCode(attendanceObject.getString("eventCode"));
+                    attendance.setIsPresent("p".equalsIgnoreCase(attendanceObject.getString("attend")));
+                    attendance.setCreateDate(attendanceObject.getString("created"));
+
+                    JSONObject studentObject = index.getJSONObject("Eventee");
+                    String studentEmail = studentObject.getString("eventee_email");
+                    attendance.setStudentEmail(studentEmail);
+
+                    List<Attendance> list = map.containsKey(studentEmail) ? map.get(studentEmail) : new ArrayList<Attendance>();
+                    list.add(attendance);
+
+                    map.put(studentEmail, list);
+                }
             }
 
         } catch (JSONException e) {

@@ -126,8 +126,9 @@ public final class AppConstants {
     public static final String URL_ADD_ATTENDEE_TO_EVENT = "http://www.abdevs.com/attendance/Mobiles/addEventee";
     public static final String URL_ADD_EVENT_BY_ATTENDEE = "http://www.abdevs.com/attendance/Mobiles/addEventByEventee";
     public static final String URL_TAKE_ATTENDANCE_BY_EVENT_HOST = "http://www.abdevs.com/attendance/Mobiles/eventeeAttendens";
-
-
+    public static final String URL_EVENTHOST_ATTENDANCE_CURRENT_LOCATION = "http://www.abdevs.com/attendance/Mobiles/event_attendencelist";
+    public static final String URL_EVENTHOST_CUSTOM_REPORT = "http://www.abdevs.com/attendance/Mobiles/eventcustomReport";
+    public static final String URL_EVENTHOST_EXPORT_REPORT = "http://www.abdevs.com/attendance/Mobiles/eventexport";
     /*
     *
     * corporation related
