@@ -109,11 +109,11 @@ public class Attendee_AddEventActivity extends Activity {
 
             nameEditText.setText(selectedClassEventCompany.getName());
             codeEditText.setText(selectedClassEventCompany.getUniqueCode());
-            codeEditText.setVisibility(View.GONE);
+            //codeEditText.setVisibility(View.GONE);
             addAnotherClass.setVisibility(View.GONE);
             saveButton.setVisibility(View.GONE);
 
-            done.setText("Save");
+            //done.setText("Save");
 
             /* delete button */
             imgHelp.setImageResource(R.drawable.delete);
@@ -128,12 +128,12 @@ public class Attendee_AddEventActivity extends Activity {
 
                                     Map<String, String> keysAndValues = new HashMap<>();
                                     keysAndValues.put("event_code", codeEditText.getText().toString().trim());
-                                    keysAndValues.put("event_name", nameEditText.getText().toString().trim());
                                     keysAndValues.put("eventee_email", user.getEmail());
+                                    keysAndValues.put("eventee_id", user.getUserId());
                                     keysAndValues.put("status", "0");
 
                                     // finally upload data to server using async task
-                                    uploadDataAsync(AppConstants.URL_ADD_EVENT_BY_ATTENDEE, keysAndValues);
+                                    uploadDataAsync(AppConstants.URL_DELETE_EVENTEE_BY_EVENT, keysAndValues);
 
                                 }
                             })

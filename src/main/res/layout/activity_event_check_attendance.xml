@@ -28,7 +28,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center_horizontal"
-            android:text="Absent"
+            android:text="Attendance"
             android:textColor="@color/white"
             android:textSize="20sp"/>
 
@@ -44,22 +44,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/linearLayout3"
-        android:layout_marginLeft="15dp"
-        android:layout_marginRight="15dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_margin="5dp">
 
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:gravity="center_vertical"
-            android:text="Absent:"
-            android:textColor="@color/blue"
-            android:textSize="22sp"/>
 
         <ListView
             android:id="@+id/absentListView"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"/>
 
     </LinearLayout>

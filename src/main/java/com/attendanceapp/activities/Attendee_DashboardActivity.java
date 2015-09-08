@@ -190,7 +190,7 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
     private void classInformationLayout() {
         Bundle bundle = new Bundle();
         bundle.putInt(AppConstants.EXTRA_USER_ROLE, UserRole.Attendee.getRole());
-        bundle.putInt(StudentAddClassActivity.EXTRA_STUDENT_CLASS_INDEX, mViewPager.getCurrentItem());
+        bundle.putInt(Attendee_AddEventActivity.EXTRA_SELECTED_CLASS_INDEX, mViewPager.getCurrentItem());
 
         AndroidUtils.openActivity(this, Attendee_AddEventActivity.class, bundle, false);
     }
