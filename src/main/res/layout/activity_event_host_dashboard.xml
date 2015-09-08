@@ -423,7 +423,7 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:padding="20dp"
-            android:text="@string/no_company_data"
+            android:text="@string/no_event_data"
             android:textSize="20sp" />
 
     </LinearLayout>

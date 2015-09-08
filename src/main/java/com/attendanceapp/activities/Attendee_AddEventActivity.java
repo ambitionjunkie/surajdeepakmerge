@@ -295,52 +295,7 @@ public class Attendee_AddEventActivity extends Activity {
 
 
     private void updateDataAsync() {
-        new AsyncTask<Void, Void, String>() {
-            private ProgressDialog progressDialog = new ProgressDialog(Attendee_AddEventActivity.this);
-
-            @Override
-            protected void onPreExecute() {
-                progressDialog.setMessage("Please wait...");
-                progressDialog.setCancelable(false);
-                progressDialog.show();
-            }
-
-            @Override
-            protected String doInBackground(Void... params) {
-                HashMap<String, String> hm = new HashMap<>();
-                hm.put("id", user.getUserId());
-                hm.put("role", String.valueOf(UserRole.Attendee.getRole()));
-                try {
-                    return new WebUtils().post(AppConstants.URL_GET_DATA_BY_ID, hm);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(String result) {
-                progressDialog.dismiss();
-                if (result != null) {
-
-                    Student student1 = new Student(user);
-                    List<StudentClass> teacherClasses = DataUtils.getStudentClassListFromJsonString(result);
-
-                    if (student1.getStudentClassList().size() != teacherClasses.size()) {
-
-                        student1.getStudentClassList().clear();
-                        student1.getStudentClassList().addAll(teacherClasses);
-
-                        userUtils.saveUserWithDataToSharedPrefs(user, Student.class);
-
-                    }
-                }
-                startActivity(new Intent(Attendee_AddEventActivity.this, Attendee_DashboardActivity.class));
-                finish();
-            }
-        }.execute();
-
+        startActivity(new Intent(Attendee_AddEventActivity.this, Attendee_DashboardActivity.class));
+        finish();
     }
-
-
 }
