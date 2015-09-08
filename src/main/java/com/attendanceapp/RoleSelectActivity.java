@@ -18,6 +18,7 @@ import android.widget.Toast;
 import com.attendanceapp.activities.AddClassEventCompanyActivity;
 import com.attendanceapp.activities.Attendee_AddEventActivity;
 import com.attendanceapp.activities.CreateClassEventCompanyActivity;
+import com.attendanceapp.activities.EventHost_AddEventActivity;
 import com.attendanceapp.models.Employee;
 import com.attendanceapp.models.EventHost;
 import com.attendanceapp.models.Eventee;
@@ -225,7 +226,7 @@ public class RoleSelectActivity extends Activity implements View.OnClickListener
                             } else if ("5".equalsIgnoreCase(userRole)) {
                                 activityToStart = new Intent(RoleSelectActivity.this, AddClassEventCompanyActivity.class);
                             } else if ("6".equalsIgnoreCase(userRole)) {
-                                activityToStart = new Intent(RoleSelectActivity.this, CreateClassEventCompanyActivity.class);
+                                activityToStart = new Intent(RoleSelectActivity.this, EventHost_AddEventActivity.class);
                             } else if ("7".equalsIgnoreCase(userRole)) {
                                 activityToStart = new Intent(RoleSelectActivity.this, Attendee_AddEventActivity.class);
                             }

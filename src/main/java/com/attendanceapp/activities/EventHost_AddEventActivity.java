@@ -847,8 +847,8 @@ public class EventHost_AddEventActivity extends Activity implements View.OnClick
     @Override
     public void onBackPressed() {
         if (firstTime) {
-            if (userRole == UserRole.Manager) {
-                startActivity(new Intent(this, Manager_DashboardActivity.class));
+            if (userRole == UserRole.EventHost) {
+                startActivity(new Intent(this, EventHost_DashboardActivity.class));
                 finish();
             }
 

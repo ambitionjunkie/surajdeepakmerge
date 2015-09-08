@@ -162,7 +162,7 @@ public class ShowEventUsersActivity extends Activity implements View.OnClickList
         if (requestCode == REQUEST_ADD_STUDENT) {
             if (resultCode == RESULT_OK) {
                 makeToast("Added successfully!");
-                //updateDataAsync();
+                updateDataAsync();
             } else {
                 makeToast("Error, not added!");
             }

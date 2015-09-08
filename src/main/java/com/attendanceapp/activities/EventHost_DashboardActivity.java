@@ -365,6 +365,7 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
     private boolean haveStudentsInClass() {
         int viewPagerIndex = mViewPager.getCurrentItem();
         List<Event> list = user.getEventArrayList();
+
         Event teacherClass = list.size() > viewPagerIndex ? list.get(viewPagerIndex) : null;
 
         return teacherClass != null && teacherClass.getUsers().size() > 0;
@@ -442,7 +443,7 @@ public class EventHost_DashboardActivity extends FragmentActivity implements Vie
             List<Event> mainList = user.getEventArrayList();
             List<Event> newList = user1.getEventArrayList();
 
-            if (mainList != null && newList != null && mainList.size() != newList.size()) {
+            if (mainList != null && newList != null) {
                 user.getEventArrayList().clear();
                 user.getEventArrayList().addAll(user1.getEventArrayList());
                 baseViewPagerAdapter.notifyDataSetChanged();

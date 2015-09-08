@@ -257,6 +257,9 @@
             android:name=".activities.EventHost_Absent"
             android:windowSoftInputMode="stateHidden|adjustPan" />
         <activity
+            android:name=".activities.EventAttendanceActivity"
+            android:windowSoftInputMode="stateHidden|adjustPan" />
+        <activity
             android:name=".activities.CreateClassEventCompanyActivity"
             android:windowSoftInputMode="stateHidden|adjustPan" />
         <activity

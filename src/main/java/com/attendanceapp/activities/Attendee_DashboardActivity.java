@@ -239,7 +239,7 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
     }
 
     private void attendanceLayout() {
-        Intent intent = new Intent(Attendee_DashboardActivity.this, StudentCheckAttendanceActivity.class);
+        Intent intent = new Intent(Attendee_DashboardActivity.this, EventAttendanceActivity.class);
         intent.putExtra(StudentCheckAttendanceActivity.EXTRA_STUDENT_CLASS, user.getEventArrayList().get(mViewPager.getCurrentItem()));
         intent.putExtra(StudentCheckAttendanceActivity.EXTRA_STUDENT, user);
         startActivity(intent);
