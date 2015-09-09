@@ -109,11 +109,11 @@ public class Attendee_AddEventActivity extends Activity {
 
             nameEditText.setText(selectedClassEventCompany.getName());
             codeEditText.setText(selectedClassEventCompany.getUniqueCode());
-            codeEditText.setVisibility(View.GONE);
+            //codeEditText.setVisibility(View.GONE);
             addAnotherClass.setVisibility(View.GONE);
             saveButton.setVisibility(View.GONE);
 
-            done.setText("Save");
+            //done.setText("Save");
 
             /* delete button */
             imgHelp.setImageResource(R.drawable.delete);
@@ -128,12 +128,12 @@ public class Attendee_AddEventActivity extends Activity {
 
                                     Map<String, String> keysAndValues = new HashMap<>();
                                     keysAndValues.put("event_code", codeEditText.getText().toString().trim());
-                                    keysAndValues.put("event_name", nameEditText.getText().toString().trim());
                                     keysAndValues.put("eventee_email", user.getEmail());
+                                    keysAndValues.put("eventee_id", user.getUserId());
                                     keysAndValues.put("status", "0");
 
                                     // finally upload data to server using async task
-                                    uploadDataAsync(AppConstants.URL_ADD_EVENT_BY_ATTENDEE, keysAndValues);
+                                    uploadDataAsync(AppConstants.URL_DELETE_EVENTEE_BY_EVENT, keysAndValues);
 
                                 }
                             })
@@ -295,52 +295,7 @@ public class Attendee_AddEventActivity extends Activity {
 
 
     private void updateDataAsync() {
-        new AsyncTask<Void, Void, String>() {
-            private ProgressDialog progressDialog = new ProgressDialog(Attendee_AddEventActivity.this);
-
-            @Override
-            protected void onPreExecute() {
-                progressDialog.setMessage("Please wait...");
-                progressDialog.setCancelable(false);
-                progressDialog.show();
-            }
-
-            @Override
-            protected String doInBackground(Void... params) {
-                HashMap<String, String> hm = new HashMap<>();
-                hm.put("id", user.getUserId());
-                hm.put("role", String.valueOf(UserRole.Attendee.getRole()));
-                try {
-                    return new WebUtils().post(AppConstants.URL_GET_DATA_BY_ID, hm);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(String result) {
-                progressDialog.dismiss();
-                if (result != null) {
-
-                    Student student1 = new Student(user);
-                    List<StudentClass> teacherClasses = DataUtils.getStudentClassListFromJsonString(result);
-
-                    if (student1.getStudentClassList().size() != teacherClasses.size()) {
-
-                        student1.getStudentClassList().clear();
-                        student1.getStudentClassList().addAll(teacherClasses);
-
-                        userUtils.saveUserWithDataToSharedPrefs(user, Student.class);
-
-                    }
-                }
-                startActivity(new Intent(Attendee_AddEventActivity.this, Attendee_DashboardActivity.class));
-                finish();
-            }
-        }.execute();
-
+        startActivity(new Intent(Attendee_AddEventActivity.this, Attendee_DashboardActivity.class));
+        finish();
     }
-
-
 }

@@ -92,9 +92,9 @@ public class EventAttendanceActivity extends Activity {
 
                     absentArrayList.clear();
                     for (Attendance attendance : stringArrayList) {
-                        if (!attendance.isPresent()) {
+                        //if (!attendance.isPresent()) {
                             absentArrayList.add(attendance);
-                        }
+                        //}
                     }
 
                     setAdapter();
@@ -132,7 +132,7 @@ public class EventAttendanceActivity extends Activity {
         }
 
         class ViewHolder {
-            TextView dateTextView;
+            TextView dateTextView, statusTextView;
             ImageButton deleteImageButton;
         }
 
@@ -145,6 +145,7 @@ public class EventAttendanceActivity extends Activity {
                 view = inflater.inflate(R.layout.list_item_absent, null, false);
                 holder = new ViewHolder();
 
+                holder.statusTextView = (TextView) view.findViewById(R.id.status);
                 holder.dateTextView = (TextView) view.findViewById(R.id.dateTextView);
                 holder.deleteImageButton = (ImageButton) view.findViewById(R.id.deleteImageButton);
                 holder.deleteImageButton.setVisibility(View.GONE);
@@ -155,6 +156,11 @@ public class EventAttendanceActivity extends Activity {
             }
 
             holder.dateTextView.setText(messagesStringArrayList.get(position).getCreateDate());
+            if (messagesStringArrayList.get(position).isPresent()) {
+                holder.statusTextView.setText("P");
+            }else {
+                holder.statusTextView.setText("A");
+            }
 
             return view;
         }

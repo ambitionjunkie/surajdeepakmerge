@@ -190,7 +190,7 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
     private void classInformationLayout() {
         Bundle bundle = new Bundle();
         bundle.putInt(AppConstants.EXTRA_USER_ROLE, UserRole.Attendee.getRole());
-        bundle.putInt(StudentAddClassActivity.EXTRA_STUDENT_CLASS_INDEX, mViewPager.getCurrentItem());
+        bundle.putInt(Attendee_AddEventActivity.EXTRA_SELECTED_CLASS_INDEX, mViewPager.getCurrentItem());
 
         AndroidUtils.openActivity(this, Attendee_AddEventActivity.class, bundle, false);
     }
@@ -276,15 +276,16 @@ public class Attendee_DashboardActivity extends FragmentActivity implements View
     @Override
     protected void onResume() {
         super.onResume();
-        Student student1 = new Gson().fromJson(userUtils.getUserDataFromSharedPrefs(), Student.class);
 
-        if (student1 != null) {
+        User user1 = userUtils.getUserFromSharedPrefs();
+
+        if (user1 != null) {
             List<Event> teacherClasses = user.getEventArrayList();
-            List<Event> teacher1Classes = student1.getEventArrayList();
+            List<Event> teacher1Classes = user1.getEventArrayList();
 
-            if (teacherClasses != null && teacher1Classes != null && teacherClasses.size() != teacher1Classes.size()) {
+            if (teacherClasses != null && teacher1Classes != null) {
                 user.getEventArrayList().clear();
-                user.getEventArrayList().addAll(student1.getEventArrayList());
+                user.getEventArrayList().addAll(user1.getEventArrayList());
                 mStudentPagerAdapter.notifyDataSetChanged();
                 setOneWordTextView(0);
                 setNotificationBadge(0);
