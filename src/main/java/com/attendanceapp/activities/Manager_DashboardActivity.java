@@ -2,6 +2,7 @@ package com.attendanceapp.activities;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -23,11 +24,19 @@ import android.widget.Toast;
 
 import com.attendanceapp.Absent;
 import com.attendanceapp.AppConstants;
+import com.attendanceapp.ManagerSendMessageToOneMeeting;
 import com.attendanceapp.OnSwipeTouchListener;
 import com.attendanceapp.R;
+import com.attendanceapp.TeacherDashboardActivity;
 import com.attendanceapp.TeacherSendMessageToOneClass;
+import com.attendanceapp.TeacherShowClassStudentsActivity;
 import com.attendanceapp.adapters.BaseViewPagerAdapter;
+import com.attendanceapp.adapters.ManagerPagerAdapter;
 import com.attendanceapp.models.ClassEventCompany;
+import com.attendanceapp.models.Manager;
+import com.attendanceapp.models.ManagerClass;
+import com.attendanceapp.models.Teacher;
+import com.attendanceapp.models.TeacherClass;
 import com.attendanceapp.models.User;
 import com.attendanceapp.models.UserRole;
 import com.attendanceapp.utils.AndroidUtils;

@@ -476,6 +476,7 @@ public class RegisterActivity extends Activity implements View.OnClickListener,
 
                             String pic=jsonObject.getJSONObject("data").getString("full_image_url")+jsonObject.getJSONObject("data").getJSONObject("userdata").getString("profile_pic");
                             Picasso.with(RegisterActivity.this).load(pic).transform(new CircleTransform()).memoryPolicy(MemoryPolicy.NO_CACHE).networkPolicy(NetworkPolicy.NO_CACHE).placeholder(R.drawable.ico_user).error(R.drawable.ico_user).into(edit_image);
+                            shared.edit().putString("ImageUrl",pic).apply();
                             System.out.println("User image is following"+pic);
                         }
                     } catch (JSONException e) {

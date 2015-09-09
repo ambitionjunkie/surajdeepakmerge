@@ -14,6 +14,7 @@ import android.view.WindowManager;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,6 +31,7 @@ import com.attendanceapp.utils.DataUtils;
 import com.attendanceapp.utils.StringUtils;
 import com.attendanceapp.utils.UserUtils;
 import com.attendanceapp.utils.WebUtils;
+import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -47,7 +49,7 @@ public class EventHostSendMessage extends Activity implements View.OnClickListen
     EditText messageEditText;
     TextView classNameTextView;
     SharedPreferences sharedPreferences;
-
+    SharedPreferences shared;
     ArrayList<ClassMessage> classMessageArrayList = new ArrayList<>();
     ListAdapter listAdapter;
     String allStudentEmailsInClass;
@@ -65,7 +67,7 @@ public class EventHostSendMessage extends Activity implements View.OnClickListen
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_teacher_send_message_to_one_class);
-
+        shared = getSharedPreferences("myapp", Context.MODE_PRIVATE);
         messageEditText = (EditText) findViewById(R.id.editMessage);
         messagesListView = (ListView) findViewById(R.id.messagesList);
         sendMessageButton = (Button) findViewById(R.id.sendMessageButton);
@@ -181,7 +183,7 @@ public class EventHostSendMessage extends Activity implements View.OnClickListen
         stringStringHashMap.put("class_unique_code", teacherClass.getUniqueCode());
         stringStringHashMap.put("student_id", allStudentIdsInClass);
         stringStringHashMap.put("user_id", user.getUserId());
-
+        stringStringHashMap.put("image_url", shared.getString("ImageUrl", ""));
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected void onPreExecute() {
@@ -203,7 +205,7 @@ public class EventHostSendMessage extends Activity implements View.OnClickListen
             @Override
             protected void onPostExecute(Void aVoid) {
                 if (result != null) {
-                    classMessageArrayList.add(new ClassMessage(message, new Date().toString()));
+                    classMessageArrayList.add(new ClassMessage(message, new Date().toString(),shared.getString("ImageUrl", "")));
                     listAdapter.notifyDataSetChanged();
 
                     if (classMessageArrayList.size() > 0) {
@@ -245,6 +247,7 @@ public class EventHostSendMessage extends Activity implements View.OnClickListen
 
         class ViewHolder {
             TextView message, time;
+            ImageView imgPhoto;
         }
 
         @SuppressLint("InflateParams")
@@ -259,7 +262,7 @@ public class EventHostSendMessage extends Activity implements View.OnClickListen
 
                 holder.message = (TextView) view.findViewById(R.id.message);
                 holder.time = (TextView) view.findViewById(R.id.time);
-
+                holder.imgPhoto = (ImageView) view.findViewById(R.id.imgPhoto);
                 view.setTag(holder);
             } else {
                 holder = (ViewHolder) view.getTag();
@@ -269,7 +272,13 @@ public class EventHostSendMessage extends Activity implements View.OnClickListen
 
             holder.message.setText(classMessage.getMessage());
             holder.time.setText(classMessage.getTime());
+            if(classMessage.getUrl()!=null && !classMessage.getUrl().equals("")) {
 
+                Picasso.with(context).load(classMessage.getUrl()).centerCrop().resize(70, 70).placeholder(R.drawable.photo).error(R.drawable.photo).into(holder.imgPhoto);
+            }
+            else{
+                Picasso.with(context).load("b").centerCrop().resize(70, 70).placeholder(R.drawable.photo).error(R.drawable.photo).into(holder.imgPhoto);
+            }
             return view;
         }
     }

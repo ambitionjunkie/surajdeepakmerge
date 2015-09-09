@@ -1,13 +1,16 @@
 package com.attendanceapp.models;
 
 public class ClassMessage {
-    private String id, message, time, from, toId, toEmail, classCode, classId;
+    private String id, message, time, from, toId, toEmail, classCode, classId, url;
+    ;
 
-    public ClassMessage() {}
+    public ClassMessage() {
+    }
 
-    public ClassMessage(String message, String time) {
+    public ClassMessage(String message, String time, String url) {
         this.message = message;
         this.time = time;
+        this.url = url;
     }
 
     public String getMessage() {
@@ -72,5 +75,13 @@ public class ClassMessage {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getUrl() {
+        return url;
     }
 }

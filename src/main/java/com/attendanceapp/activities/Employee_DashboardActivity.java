@@ -24,13 +24,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.attendanceapp.AppConstants;
+import com.attendanceapp.EmployeeNotificationActivity;
+import com.attendanceapp.EmployeePagerAdapter;
 import com.attendanceapp.OnSwipeTouchListener;
 import com.attendanceapp.R;
 import com.attendanceapp.StudentAddClassActivity;
 import com.attendanceapp.StudentCheckAttendanceActivity;
-import com.attendanceapp.StudentNotificationActivity;
-import com.attendanceapp.adapters.BaseViewPagerAdapter;
-import com.attendanceapp.models.ClassEventCompany;
+import com.attendanceapp.models.Employee;
+import com.attendanceapp.models.EmployeeClass;
 import com.attendanceapp.models.Student;
 import com.attendanceapp.models.User;
 import com.attendanceapp.models.UserRole;
@@ -65,11 +66,12 @@ public class Employee_DashboardActivity extends FragmentActivity implements View
     ImageView settingButton;
     protected LinearLayout classInformationLayout, settingPage;
 
-    BaseViewPagerAdapter mStudentPagerAdapter;
+    EmployeePagerAdapter mStudentPagerAdapter;
     protected SharedPreferences sharedPreferences;
     Animation textAnimation;
 
     User user;
+    Employee employee;
     protected UserUtils userUtils;
 
     @Override
@@ -112,10 +114,10 @@ public class Employee_DashboardActivity extends FragmentActivity implements View
         sharedPreferences = AndroidUtils.getCommonSharedPrefs(getApplicationContext());
         userUtils = new UserUtils(Employee_DashboardActivity.this);
         user = userUtils.getUserFromSharedPrefs();
-
-        mStudentPagerAdapter = new BaseViewPagerAdapter(getSupportFragmentManager(), user.getClassEventCompanyArrayList());
+        employee = new Employee(user);
+        mStudentPagerAdapter = new EmployeePagerAdapter(getSupportFragmentManager(), employee.getStudentClassList());
         mViewPager.setAdapter(mStudentPagerAdapter);
-
+        setNotificationBadge(0);
         setOneWordTextView(0);
 
 
@@ -132,25 +134,25 @@ public class Employee_DashboardActivity extends FragmentActivity implements View
     private void setOneWordTextView(int current) {
         oneWordTextView.setText("");
 
-        if (user.getClassEventCompanyArrayList().size() > current) {
-            oneWordTextView.setText(String.valueOf(user.getClassEventCompanyArrayList().get(current).getName().charAt(0)).toUpperCase());
+        if (employee.getStudentClassList().size() > current) {
+            oneWordTextView.setText(String.valueOf(employee.getStudentClassList().get(current).getMeetingName().charAt(0)).toUpperCase());
         }
 
         showMessageIfNoClass();
-        setNotificationBadge(current);
+        //setNotificationBadge(current);
     }
 
     private void showMessageIfNoClass() {
-        swipePage.setVisibility(user.getClassEventCompanyArrayList().size() < 1 ? View.GONE : View.VISIBLE);
+        swipePage.setVisibility(employee.getStudentClassList().size() < 1 ? View.GONE : View.VISIBLE);
     }
 
     private void setNotificationBadge(int classIndex) {
-        if (classIndex >= user.getClassEventCompanyArrayList().size()) {
+        if (classIndex >= employee.getStudentClassList().size()) {
             return;
         }
-        final ClassEventCompany studentClass = user.getClassEventCompanyArrayList().get(classIndex);
+        final EmployeeClass studentClass =employee.getStudentClassList().get(classIndex);
 
-        int total = sharedPreferences.getInt(user.getUserId() + studentClass.getUniqueCode(), 0);
+        int total = sharedPreferences.getInt(employee.getUserId() + studentClass.getMeetingUniqueCode(), 0);
         if (total > 0) {
             totalNotificationsTextView.setVisibility(View.VISIBLE);
             totalNotificationsTextView.setText(String.valueOf(total));
@@ -186,11 +188,14 @@ public class Employee_DashboardActivity extends FragmentActivity implements View
     }
 
     private void classInformationLayout() {
-        Bundle bundle = new Bundle();
-        bundle.putInt(AppConstants.EXTRA_USER_ROLE, UserRole.Employee.getRole());
-        bundle.putInt(StudentAddClassActivity.EXTRA_STUDENT_CLASS_INDEX, mViewPager.getCurrentItem());
-
-        AndroidUtils.openActivity(this, AddClassEventCompanyActivity.class, bundle, false);
+//        Bundle bundle = new Bundle();
+//        bundle.putInt(AppConstants.EXTRA_USER_ROLE, UserRole.Employee.getRole());
+//        bundle.putInt(StudentAddClassActivity.EXTRA_STUDENT_CLASS_INDEX, mViewPager.getCurrentItem());
+//
+//        AndroidUtils.openActivity(this, AddClassEventCompanyActivity.class, bundle, false);
+        Intent intent = new Intent(Employee_DashboardActivity.this, StudentAddClassActivity.class);
+        intent.putExtra(StudentAddClassActivity.EXTRA_STUDENT_CLASS_INDEX, mViewPager.getCurrentItem());
+        startActivity(intent);
     }
 
     private void settingButton() {
@@ -227,19 +232,19 @@ public class Employee_DashboardActivity extends FragmentActivity implements View
     }
 
     private void classNotificationLayout() {
-        ClassEventCompany studentClass = user.getClassEventCompanyArrayList().get(mViewPager.getCurrentItem());
-        sharedPreferences.edit().putInt(user.getUserId() + studentClass.getUniqueCode(), 0).apply();
+        EmployeeClass studentClass = employee.getStudentClassList().get(mViewPager.getCurrentItem());
+        sharedPreferences.edit().putInt(employee.getUserId() + studentClass.getMeetingUniqueCode(), 0).apply();
         setNotificationBadge(mViewPager.getCurrentItem());
 
-        Intent intent = new Intent(Employee_DashboardActivity.this, StudentNotificationActivity.class);
-        intent.putExtra(StudentNotificationActivity.EXTRA_STUDENT_CLASS, studentClass);
+        Intent intent = new Intent(Employee_DashboardActivity.this, EmployeeNotificationActivity.class);
+        intent.putExtra(EmployeeNotificationActivity.EXTRA_STUDENT_CLASS, studentClass);
         startActivity(intent);
     }
 
     private void attendanceLayout() {
         Intent intent = new Intent(Employee_DashboardActivity.this, StudentCheckAttendanceActivity.class);
-        intent.putExtra(StudentCheckAttendanceActivity.EXTRA_STUDENT_CLASS, user.getClassEventCompanyArrayList().get(mViewPager.getCurrentItem()));
-        intent.putExtra(StudentCheckAttendanceActivity.EXTRA_STUDENT, user);
+        intent.putExtra(StudentCheckAttendanceActivity.EXTRA_STUDENT_CLASS, employee.getStudentClassList().get(mViewPager.getCurrentItem()));
+        intent.putExtra(StudentCheckAttendanceActivity.EXTRA_STUDENT, employee);
         startActivity(intent);
     }
 
@@ -274,15 +279,15 @@ public class Employee_DashboardActivity extends FragmentActivity implements View
     @Override
     protected void onResume() {
         super.onResume();
-        Student student1 = new Gson().fromJson(userUtils.getUserDataFromSharedPrefs(), Student.class);
+        Employee student1 = new Gson().fromJson(userUtils.getUserDataFromSharedPrefs(), Employee.class);
 
         if (student1 != null) {
-            List<ClassEventCompany> teacherClasses = user.getClassEventCompanyArrayList();
-            List<ClassEventCompany> teacher1Classes = student1.getClassEventCompanyArrayList();
+            List<EmployeeClass> teacherClasses = employee.getStudentClassList();
+            List<EmployeeClass> teacher1Classes = student1.getStudentClassList();
 
             if (teacherClasses != null && teacher1Classes != null && teacherClasses.size() != teacher1Classes.size()) {
-                user.getClassEventCompanyArrayList().clear();
-                user.getClassEventCompanyArrayList().addAll(student1.getClassEventCompanyArrayList());
+                employee.getStudentClassList().clear();
+                employee.getStudentClassList().addAll(student1.getStudentClassList());
                 mStudentPagerAdapter.notifyDataSetChanged();
                 setOneWordTextView(0);
                 setNotificationBadge(0);
@@ -303,8 +308,8 @@ public class Employee_DashboardActivity extends FragmentActivity implements View
             @Override
             protected Void doInBackground(Void... params) {
                 HashMap<String, String> hm = new HashMap<>();
-                hm.put("id", user.getUserId());
-                hm.put("role", String.valueOf(UserRole.Student.getRole()));
+                hm.put("id", employee.getUserId());
+                hm.put("role", String.valueOf(UserRole.Employee.getRole()));
                 try {
                     result = new WebUtils().post(AppConstants.URL_GET_DATA_BY_ID, hm);
                 } catch (IOException e) {
@@ -317,15 +322,15 @@ public class Employee_DashboardActivity extends FragmentActivity implements View
             protected void onPostExecute(Void aVoid) {
                 if (result != null) {
 
-                    List<ClassEventCompany> teacherClasses = DataUtils.getStudentFromJsonString(result).getClassEventCompanyArrayList();
+                    List<EmployeeClass> teacherClasses = DataUtils.getEmployeeFromJsonString(result).getStudentClassList();
 
-                    if (user.getClassEventCompanyArrayList().size() != teacherClasses.size()) {
+                    if (employee.getStudentClassList().size() != teacherClasses.size()) {
 
-                        user.getClassEventCompanyArrayList().clear();
-                        user.getClassEventCompanyArrayList().addAll(teacherClasses);
+                        employee.getStudentClassList().clear();
+                        employee.getStudentClassList().addAll(teacherClasses);
 
 //                        sharedPreferences.edit().putString(AppConstants.KEY_LOGGED_IN_USER_DATA, new Gson().toJson(user, Student.class)).apply();
-                        userUtils.saveUserToSharedPrefs(user);
+                        userUtils.saveUserToSharedPrefs(employee);
 
                         mStudentPagerAdapter.notifyDataSetChanged();
                         setOneWordTextView(0);

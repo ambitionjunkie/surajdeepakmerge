@@ -4,7 +4,10 @@ import com.attendanceapp.models.Attendance;
 import com.attendanceapp.models.Attendee;
 import com.attendanceapp.models.ClassEventCompany;
 import com.attendanceapp.models.ClassMessage;
+import com.attendanceapp.models.Employee;
+import com.attendanceapp.models.EmployeeClass;
 import com.attendanceapp.models.Event;
+import com.attendanceapp.models.ManagerClass;
 import com.attendanceapp.models.RepeatType;
 import com.attendanceapp.models.Student;
 import com.attendanceapp.models.StudentClass;
@@ -174,7 +177,89 @@ public final class DataUtils {
         }
         return students;
     }
+    public static ArrayList<ManagerClass> getCompanyArrayListFromJsonString(String jsonString) {
 
+        // {"Data":[{"Event":[]}]}
+
+        ArrayList<ManagerClass> teacherClassList = new ArrayList<>();
+
+        try {
+            JSONObject userDataJsonObject = new JSONObject(jsonString);
+            JSONArray dataArray = userDataJsonObject.getJSONArray("Data");
+            JSONObject zeroObject = dataArray.getJSONObject(0);
+
+            JSONArray classArray;
+            classArray = zeroObject.getJSONArray("Company");
+
+
+            if (classArray != null) {
+                for (int i = 0; i < classArray.length(); i++) {
+                    JSONObject jsonObject = classArray.getJSONObject(i);
+                    ManagerClass teacherClass = new ManagerClass();
+
+                    teacherClass.setId(jsonObject.getString("id"));
+                    teacherClass.setManagerId(jsonObject.getString("user_id"));
+                    teacherClass.setClassName(jsonObject.getString("companyName"));
+
+//                    if (!jsonObject.has("companyName")) {
+                    simpleDateFormat.applyPattern("HH:mm:ss");
+                    /*"startTime": "04:30:00",
+                      "endTime": "04:30:00",
+                      "startDate": "2015-09-01",
+                      "endDate": "2015-09-01",
+                    */
+                    if (jsonObject.has("startTime")) {
+                        //calendar.setTime(simpleDateFormat.parse(jsonObject.getString("startTime")));
+                        teacherClass.setStartTime(jsonObject.getString("startTime"));
+                    }
+                    if (jsonObject.has("endTime")) {
+                       // calendar.setTime(simpleDateFormat.parse(jsonObject.getString("endTime")));
+                        teacherClass.setEndTime(jsonObject.getString("endTime"));
+                    }
+
+                    simpleDateFormat.applyPattern("yyyy-MM-dd");
+
+                    if (jsonObject.has("startDate") && !"null".equalsIgnoreCase(jsonObject.getString("startDate"))) {
+                      //  calendar.setTime(simpleDateFormat.parse(jsonObject.getString("startDate")));
+                        teacherClass.setStartDate(jsonObject.getString("startDate"));
+                    }
+
+                    if (jsonObject.has("endDate") && !"null".equalsIgnoreCase(jsonObject.getString("endDate"))) {
+                        //calendar.setTime(simpleDateFormat.parse(jsonObject.getString("endDate")));
+                        teacherClass.setEndDate(jsonObject.getString("endDate"));
+                    }
+//                    }
+                    teacherClass.setRepeatType(getRepeatTypeFromString(jsonObject.getString("repeatType")));
+                    teacherClass.setInterval(jsonObject.getInt("interval"));
+                    teacherClass.setDistrict(jsonObject.getString("district"));
+                    teacherClass.setClassCode(jsonObject.getString("companyCode"));
+
+
+                    teacherClass.setLatitude(jsonObject.getDouble("latitude"));
+                    teacherClass.setLongitude(jsonObject.getDouble("longitude"));
+                    teacherClass.setStatus(jsonObject.getInt("status"));
+                    teacherClass.setCreateDate(jsonObject.getString("created"));
+                    teacherClass.setModifiedDate(jsonObject.getString("modified"));
+
+                    if (jsonObject.has("Beacon")) {
+                        teacherClass.setBeaconList(getBeaconsList(jsonObject.getJSONArray("Beacon")));
+                    }
+
+
+                   if (jsonObject.has("Employee")) {
+                        teacherClass.setEmployeeList(getManagerClassEmployeeList(jsonObject.getJSONArray("Employee")));
+                    }
+
+
+                    teacherClassList.add(teacherClass);
+                }
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return teacherClassList;
+    }
     public static List<TeacherClass> getTeacherClassListFromJsonString(String jsonString) {
         List<TeacherClass> teacherClassList = new LinkedList<>();
 
@@ -218,7 +303,33 @@ public final class DataUtils {
         }
         return teacherClassList;
     }
+    //"Employee":[{"id":"16","user_id":"0","company_id":"4","meetingCode":"308v8x","parent_email":"","status":"1","employee_email":"fhdj@hj.com","employee_name":"","image":"","created":"2015-09-04 18:42:24","modified":"2015-09-04 18:42:24"}
+    private static List<Employee> getManagerClassEmployeeList(final JSONArray student) {
+        List<Employee> students = new LinkedList<>();
 
+        for (int i = 0; i < student.length(); i++) {
+            try {
+                JSONObject object = student.getJSONObject(i);
+                Employee s1 = new Employee();
+
+                s1.setUserId(object.getString("id"));
+                s1.setStudentClassId(object.getString("company_id"));
+                s1.setClassCode(object.getString("meetingCode"));
+                s1.setStatus(object.getInt("status"));
+                s1.setEmail(object.getString("employee_email"));
+                s1.setCreateDate(object.getString("created"));
+                s1.setModifiedDate(object.getString("modified"));
+
+
+                students.add(s1);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return students;
+    }
     private static List<Student> getTeacherClassStudentsList(final JSONArray student) {
         List<Student> students = new LinkedList<>();
 
@@ -313,7 +424,37 @@ public final class DataUtils {
 
         return student;
     }
+    public static Employee getEmployeeFromJsonString(String jsonString) {
 
+        Employee employee = new Employee();
+
+        try {
+            JSONObject jsonObject = new JSONObject(jsonString);
+            JSONArray dataArray = jsonObject.getJSONArray("Data");
+
+            for (int i = 0; i < dataArray.length(); i++) {
+                JSONObject index = dataArray.getJSONObject(i);
+
+                if (index.has("Company")) {
+                    JSONObject jsonObject1 = index.getJSONObject("Company");
+                    EmployeeClass employeeClass = new EmployeeClass();
+
+                    employeeClass.setEmployeeMeetingId(jsonObject1.getString("id"));
+                    employeeClass.setManagerId(jsonObject1.getString("user_id"));
+                    employeeClass.setMeetingName(jsonObject1.getString("companyName"));
+                    employeeClass.setMeetingUniqueCode(jsonObject1.getString("meetingCode"));
+
+                    employee.getStudentClassList().add(employeeClass);
+                }
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+        return employee;
+    }
     public static ArrayList<ClassMessage> getMessagesArrayList(String jsonString) {
 
         ArrayList<ClassMessage> classMessageArrayList = new ArrayList<>();
@@ -343,6 +484,9 @@ public final class DataUtils {
                 }
                 if (jsonObject1.has("created")) {
                     classMessage.setTime(jsonObject1.getString("created"));
+                }
+                if (jsonObject1.has("image_url")) {
+                    classMessage.setUrl(jsonObject1.getString("image_url"));
                 }
 
                 classMessageArrayList.add(classMessage);
@@ -410,6 +554,9 @@ public final class DataUtils {
                 }
                 if (jsonObject1.has("created")) {
                     classMessage.setTime(jsonObject1.getString("created"));
+                }
+                if (jsonObject1.has("image_url")) {
+                    classMessage.setUrl(jsonObject1.getString("image_url"));
                 }
 
                 classMessageArrayList.add(classMessage);

@@ -6,18 +6,18 @@ import java.util.List;
 
 public class Manager extends User implements Serializable {
 
-    private List<Company> companies = new ArrayList<>();
+    private List<ManagerClass> companies = new ArrayList<>();
 
 
     public Manager(User user) {
         super(user.getUserId(),user.getUsername(),user.getSchool(),user.getUserView(),user.getUniqueCode(),user.getCreateDate(),user.getEmail(),user.getDeviceToken(),user.getStatus(),user.getUserRoles());
     }
 
-    public List<Company> getCompanies() {
+    public List<ManagerClass> getCompanies() {
         return companies;
     }
 
-    public void setCompanies(List<Company> companies) {
+    public void setCompanies(List<ManagerClass> companies) {
         this.companies = companies;
     }
 }

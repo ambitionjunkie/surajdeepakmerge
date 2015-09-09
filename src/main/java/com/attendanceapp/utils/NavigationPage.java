@@ -1,6 +1,7 @@
 package com.attendanceapp.utils;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -48,6 +49,7 @@ public class NavigationPage implements View.OnClickListener {
     private FrameLayout navigationLayout, navigationSwipe;
     private LinearLayout notificationsButton;
     private SharedPreferences sharedPreferences;
+    SharedPreferences shared;
 
 
     public interface NavigationFunctions {
@@ -58,7 +60,7 @@ public class NavigationPage implements View.OnClickListener {
     public NavigationPage(Activity activity, User user) {
         this.activity = activity;
         this.user = user;
-
+        shared=activity.getSharedPreferences("myapp", Context.MODE_PRIVATE);
         navigationBackButton = (ImageView) activity.findViewById(R.id.navigationBackButton);
         navigationButton = (ImageView) activity.findViewById(R.id.navigationButton);
         notificationStatus = (TextView) activity.findViewById(R.id.notificationStatus);
@@ -150,6 +152,7 @@ public class NavigationPage implements View.OnClickListener {
 
                             String pic=jsonObject.getJSONObject("data").getString("full_image_url")+jsonObject.getJSONObject("data").getJSONObject("userdata").getString("profile_pic");
                             Picasso.with(activity).load(pic).transform(new CircleTransform()).placeholder(R.drawable.per).memoryPolicy(MemoryPolicy.NO_CACHE).networkPolicy(NetworkPolicy.NO_CACHE).error(R.drawable.per).into(navigationButton);
+                            shared.edit().putString("ImageUrl",pic).apply();
                             System.out.println("User image is following"+pic);
                         }
                     } catch (JSONException e) {

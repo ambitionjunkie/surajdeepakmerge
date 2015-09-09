@@ -8,19 +8,20 @@ public class Employee extends User implements Serializable {
 
     private String parentEmail, childIdForLocation, studentClassId, modifiedDate, classCode;
 
-    private List<StudentClass> studentClassList = new ArrayList<>();
+    private List<EmployeeClass> employeeMeetingList = new ArrayList<>();
 
-
+    public Employee() {
+    }
     public Employee(User user) {
         super(user.getUserId(),user.getUsername(),user.getSchool(),user.getUserView(),user.getUniqueCode(),user.getCreateDate(),user.getEmail(),user.getDeviceToken(),user.getStatus(),user.getUserRoles());
     }
 
-    public List<StudentClass> getStudentClassList() {
-        return studentClassList;
+    public List<EmployeeClass> getStudentClassList() {
+        return employeeMeetingList;
     }
 
-    public void setStudentClassList(List<StudentClass> studentClassList) {
-        this.studentClassList = studentClassList;
+    public void setStudentClassList(List<EmployeeClass> employeeMeetingList) {
+        this.employeeMeetingList = employeeMeetingList;
     }
 
     public String getParentEmail() {

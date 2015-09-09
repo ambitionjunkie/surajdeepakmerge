@@ -188,6 +188,9 @@
             android:name=".StudentNotificationActivity"
             android:windowSoftInputMode="stateHidden|adjustPan" />
         <activity
+            android:name=".EmployeeNotificationActivity"
+            android:windowSoftInputMode="stateHidden|adjustPan" />
+        <activity
             android:name=".SelectLocationActivity"
             android:windowSoftInputMode="stateHidden|adjustPan" />
         <activity
@@ -279,6 +282,9 @@
             android:windowSoftInputMode="stateHidden|adjustPan" />
         <activity
             android:name=".activities.UserSendMessageToOneClass"
+            android:windowSoftInputMode="stateHidden|adjustPan" />
+        <activity
+            android:name=".ManagerSendMessageToOneMeeting"
             android:windowSoftInputMode="stateHidden|adjustPan" />
 
         <activity android:name=".activities.CommonAttendanceTakenActivity" />

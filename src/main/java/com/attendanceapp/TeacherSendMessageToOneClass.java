@@ -31,6 +31,7 @@ import com.attendanceapp.utils.DataUtils;
 import com.attendanceapp.utils.StringUtils;
 import com.attendanceapp.utils.UserUtils;
 import com.attendanceapp.utils.WebUtils;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -54,7 +55,7 @@ public class TeacherSendMessageToOneClass extends Activity implements View.OnCli
     EditText messageEditText;
     TextView classNameTextView;
     SharedPreferences sharedPreferences;
-
+    SharedPreferences shared;
     ArrayList<ClassMessage> classMessageArrayList = new ArrayList<>();
     ListAdapter listAdapter;
     NotificationListAdapter notificationListAdapter;
@@ -71,7 +72,7 @@ public class TeacherSendMessageToOneClass extends Activity implements View.OnCli
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_teacher_send_message_to_one_class);
-
+        shared = getSharedPreferences("myapp", Context.MODE_PRIVATE);
         messageEditText = (EditText) findViewById(R.id.editMessage);
         messagesListView = (ListView) findViewById(R.id.messagesList);
         sendMessageButton = (Button) findViewById(R.id.sendMessageButton);
@@ -208,7 +209,7 @@ public class TeacherSendMessageToOneClass extends Activity implements View.OnCli
         stringStringHashMap.put("class_unique_code", teacherClass.getClassCode());
         stringStringHashMap.put("student_id", allStudentIdsInClass);
         stringStringHashMap.put("user_id", teacherClass.getTeacherId());
-
+        stringStringHashMap.put("image_url", shared.getString("ImageUrl", ""));
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected void onPreExecute() {
@@ -230,7 +231,7 @@ public class TeacherSendMessageToOneClass extends Activity implements View.OnCli
             @Override
             protected void onPostExecute(Void aVoid) {
                 if (result != null) {
-                    classMessageArrayList.add(new ClassMessage(message, new Date().toString()));
+                    classMessageArrayList.add(new ClassMessage(message, new Date().toString(),shared.getString("ImageUrl", "")));
                     listAdapter.notifyDataSetChanged();
                 }
             }
@@ -241,9 +242,10 @@ public class TeacherSendMessageToOneClass extends Activity implements View.OnCli
 
     private class ListAdapter extends ArrayAdapter<ClassMessage> {
         LayoutInflater inflater;
-
+        Context context;
         public ListAdapter(Context context, ArrayList<ClassMessage> messagesStringArrayList) {
             super(context, 0, messagesStringArrayList);
+            this.context = context;
             inflater = (LayoutInflater) context.getSystemService(LAYOUT_INFLATER_SERVICE);
         }
 
@@ -251,10 +253,11 @@ public class TeacherSendMessageToOneClass extends Activity implements View.OnCli
         class ViewHolder {
             final TextView time;
             final TextView message;
-
+            ImageView imgPhoto;
             public ViewHolder(View view) {
                 message = (TextView) view.findViewById(R.id.message);
                 time = (TextView) view.findViewById(R.id.time);
+                imgPhoto = (ImageView) view.findViewById(R.id.imgPhoto);
             }
         }
 
@@ -271,10 +274,16 @@ public class TeacherSendMessageToOneClass extends Activity implements View.OnCli
 
             holder = (ViewHolder) view.getTag();
             ClassMessage classMessage = getItem(position);
-
+            System.out.println("Image is this : "+ classMessage.getUrl());
             holder.message.setText(classMessage.getMessage());
             holder.time.setText(classMessage.getTime());
-
+            if(classMessage.getUrl()!=null && !classMessage.getUrl().equals("")) {
+                Picasso.with(context).load(classMessage.getUrl()).centerCrop().resize(70, 70).placeholder(R.drawable.photo).error(R.drawable.photo).into(holder.imgPhoto);
+               // System.out.println("Image is this : "+ classMessage.getUrl());
+            }
+            else{
+                Picasso.with(context).load("b").centerCrop().resize(70, 70).placeholder(R.drawable.photo).error(R.drawable.photo).into(holder.imgPhoto);
+            }
             return view;
         }
     }
