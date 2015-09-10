@@ -27,14 +27,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e8566d19-b458-49be-a555-6b259d7f994a" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gradle/2.2.1/taskArtifacts/cache.properties.lock" afterPath="$PROJECT_DIR$/.gradle/2.2.1/taskArtifacts/cache.properties.lock" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/libraries/appcompat_v7_22_2_1.xml" afterPath="$PROJECT_DIR$/.idea/libraries/appcompat_v7_22_2_1.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/gradle.xml" afterPath="$PROJECT_DIR$/.idea/gradle.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/local.properties" afterPath="$PROJECT_DIR$/local.properties" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/libraries/support_annotations_22_2_1.xml" afterPath="$PROJECT_DIR$/.idea/libraries/support_annotations_22_2_1.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/libraries/support_v4_22_2_1.xml" afterPath="$PROJECT_DIR$/.idea/libraries/support_v4_22_2_1.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/surajdeepakmerge.iml" afterPath="$PROJECT_DIR$/surajdeepakmerge.iml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="surajdeepakmerge.iws" />
@@ -1230,7 +1222,11 @@
       <created>1441407922535</created>
       <updated>1441407922535</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="deepak10sep&#10;">
+      <created>1441843681918</created>
+      <updated>1441843681918</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -1286,7 +1282,8 @@
     <MESSAGE value="managerdashboard&#10;" />
     <MESSAGE value="manager&#10;" />
     <MESSAGE value="manager/employee&#10;" />
-    <option name="LAST_COMMIT_MESSAGE" value="manager/employee&#10;" />
+    <MESSAGE value="deepak10sep&#10;" />
+    <option name="LAST_COMMIT_MESSAGE" value="deepak10sep&#10;" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
