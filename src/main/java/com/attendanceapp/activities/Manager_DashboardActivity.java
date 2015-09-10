@@ -259,8 +259,8 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
             protected String doInBackground(Void... params) {
                 HashMap<String, String> hm = new HashMap<>();
                 hm.put("user_id", user.getUserId());
-                hm.put("class_id", classId);
-                hm.put("role", "2");
+                hm.put("company_id", classId);
+                hm.put("role", "4");
 
                 try {
                     return new WebUtils().post(AppConstants.URL_SHOW_ATTENDANCE_CURRENT_LOCATION, hm);
@@ -307,7 +307,7 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
             return;
         }
 
-        Intent intent = new Intent(Manager_DashboardActivity.this, ReportsActivity.class);
+        Intent intent = new Intent(Manager_DashboardActivity.this, Manager_ReportsActivity.class);
         intent.putExtra(ReportsActivity.EXTRA_CLASS_INDEX, mViewPager.getCurrentItem());
         intent.putExtra(ReportsActivity.EXTRA_TYPE,"manager");
         System.out.println("This is current item>>"+mViewPager.getCurrentItem());
@@ -342,9 +342,11 @@ public class Manager_DashboardActivity extends FragmentActivity implements View.
             makeToast("Please add employees!");
             return;
         }
-        Intent intent = new Intent(Manager_DashboardActivity.this, TeacherSendMessageToOneClass.class);
-        intent.putExtra(TeacherSendMessageToOneClass.EXTRA_STUDENT_CLASS_INDEX, mViewPager.getCurrentItem());
-        intent.putExtra(TeacherSendMessageToOneClass.EXTRA_HIDE_MESSAGE_BOX, true);
+        Intent intent = new Intent(Manager_DashboardActivity.this, UserSendMessageToOneClass.class);
+        intent.putExtra(UserSendMessageToOneClass.EXTRA_SELECTED_CLASS_INDEX, mViewPager.getCurrentItem());
+        intent.putExtra(AppConstants.EXTRA_USER_ROLE, UserRole.Manager.getRole());
+        intent.putExtra(UserSendMessageToOneClass.EXTRA_HIDE_MESSAGE_BOX, true);
+        //intent.putExtra(ReportsActivity.EXTRA_TYPE,"manager");
         startActivity(intent);
     }
 

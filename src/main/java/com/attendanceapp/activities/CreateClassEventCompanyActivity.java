@@ -640,7 +640,7 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
             }
 
             if (userRole == UserRole.Manager) {
-                keysAndValues.put("meetingPlace", classEventCompany.getName());
+                keysAndValues.put("companyName", classEventCompany.getName());
             } else if (userRole == UserRole.EventHost) {
                 keysAndValues.put("eventName", classEventCompany.getName());
             } else {

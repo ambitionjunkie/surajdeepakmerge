@@ -18,6 +18,8 @@ import com.attendanceapp.AppConstants;
 import com.attendanceapp.R;
 import com.attendanceapp.models.Attendance;
 import com.attendanceapp.models.Event;
+import com.attendanceapp.models.Manager;
+import com.attendanceapp.models.ManagerClass;
 import com.attendanceapp.models.Student;
 import com.attendanceapp.models.StudentClass;
 import com.attendanceapp.models.User;
@@ -38,7 +40,7 @@ public class EventAttendanceActivity extends Activity {
     ListView listView;
 
     User student;
-    Event studentClass;
+    ManagerClass studentClass;
     List<Attendance> stringArrayList = new ArrayList<>();
     List<Attendance> absentArrayList = new ArrayList<>();
     ListAdapter listAdapter;
@@ -53,7 +55,7 @@ public class EventAttendanceActivity extends Activity {
 
         listView = (ListView) findViewById(R.id.absentListView);
 
-        studentClass = (Event) getIntent().getSerializableExtra(EXTRA_STUDENT_CLASS);
+        studentClass = (ManagerClass) getIntent().getSerializableExtra(EXTRA_STUDENT_CLASS);
         student = (User) getIntent().getSerializableExtra(EXTRA_STUDENT);
 
         updateData();

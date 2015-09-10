@@ -24,12 +24,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.attendanceapp.AppConstants;
+import com.attendanceapp.EmployeeAddMeetingActivity;
 import com.attendanceapp.EmployeeNotificationActivity;
 import com.attendanceapp.EmployeePagerAdapter;
 import com.attendanceapp.OnSwipeTouchListener;
 import com.attendanceapp.R;
 import com.attendanceapp.StudentAddClassActivity;
 import com.attendanceapp.StudentCheckAttendanceActivity;
+import com.attendanceapp.StudentDashboardActivity;
 import com.attendanceapp.models.Employee;
 import com.attendanceapp.models.EmployeeClass;
 import com.attendanceapp.models.Student;
@@ -139,7 +141,7 @@ public class Employee_DashboardActivity extends FragmentActivity implements View
         }
 
         showMessageIfNoClass();
-        //setNotificationBadge(current);
+       setNotificationBadge(current);
     }
 
     private void showMessageIfNoClass() {
@@ -190,11 +192,11 @@ public class Employee_DashboardActivity extends FragmentActivity implements View
     private void classInformationLayout() {
 //        Bundle bundle = new Bundle();
 //        bundle.putInt(AppConstants.EXTRA_USER_ROLE, UserRole.Employee.getRole());
-//        bundle.putInt(StudentAddClassActivity.EXTRA_STUDENT_CLASS_INDEX, mViewPager.getCurrentItem());
+//        bundle.putInt(EmployeeAddMeetingActivity.EXTRA_SELECTED_CLASS_INDEX, mViewPager.getCurrentItem());
 //
-//        AndroidUtils.openActivity(this, AddClassEventCompanyActivity.class, bundle, false);
-        Intent intent = new Intent(Employee_DashboardActivity.this, StudentAddClassActivity.class);
-        intent.putExtra(StudentAddClassActivity.EXTRA_STUDENT_CLASS_INDEX, mViewPager.getCurrentItem());
+//        AndroidUtils.openActivity(this, EmployeeAddMeetingActivity.class, bundle, false);
+       Intent intent = new Intent(Employee_DashboardActivity.this, EmployeeAddMeetingActivity.class);
+        intent.putExtra(EmployeeAddMeetingActivity.EXTRA_STUDENT_CLASS_INDEX, mViewPager.getCurrentItem());
         startActivity(intent);
     }
 
@@ -242,9 +244,9 @@ public class Employee_DashboardActivity extends FragmentActivity implements View
     }
 
     private void attendanceLayout() {
-        Intent intent = new Intent(Employee_DashboardActivity.this, StudentCheckAttendanceActivity.class);
-        intent.putExtra(StudentCheckAttendanceActivity.EXTRA_STUDENT_CLASS, employee.getStudentClassList().get(mViewPager.getCurrentItem()));
-        intent.putExtra(StudentCheckAttendanceActivity.EXTRA_STUDENT, employee);
+        Intent intent = new Intent(Employee_DashboardActivity.this, EmployeeAttendanceActivity.class);
+        intent.putExtra(EmployeeAttendanceActivity.EXTRA_STUDENT_CLASS, employee.getStudentClassList().get(mViewPager.getCurrentItem()));
+        intent.putExtra(EmployeeAttendanceActivity.EXTRA_STUDENT, employee);
         startActivity(intent);
     }
 
@@ -329,8 +331,8 @@ public class Employee_DashboardActivity extends FragmentActivity implements View
                         employee.getStudentClassList().clear();
                         employee.getStudentClassList().addAll(teacherClasses);
 
-//                        sharedPreferences.edit().putString(AppConstants.KEY_LOGGED_IN_USER_DATA, new Gson().toJson(user, Student.class)).apply();
-                        userUtils.saveUserToSharedPrefs(employee);
+                      //  sharedPreferences.edit().putString(AppConstants.KEY_LOGGED_IN_USER_DATA, new Gson().toJson(user, Employee.class)).apply();
+                        userUtils.saveUserToSharedPrefsss(employee);
 
                         mStudentPagerAdapter.notifyDataSetChanged();
                         setOneWordTextView(0);

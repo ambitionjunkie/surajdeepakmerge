@@ -229,7 +229,7 @@
                                 android:layout_marginTop="10dp"
                                 android:gravity="center_horizontal"
                                 android:minHeight="40dp"
-                                android:text="Class Information"
+                                android:text="Meeting Information"
                                 android:textSize="15sp"
                                 tools:ignore="RtlSymmetry" />
                         </LinearLayout>

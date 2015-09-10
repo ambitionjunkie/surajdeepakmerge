@@ -24,6 +24,8 @@ import com.attendanceapp.AppConstants;
 import com.attendanceapp.R;
 import com.attendanceapp.StudentDashboardActivity;
 import com.attendanceapp.models.ClassEventCompany;
+import com.attendanceapp.models.Employee;
+import com.attendanceapp.models.EmployeeClass;
 import com.attendanceapp.models.Student;
 import com.attendanceapp.models.StudentClass;
 import com.attendanceapp.models.User;
@@ -322,15 +324,15 @@ public class AddClassEventCompanyActivity extends Activity {
                 progressDialog.dismiss();
                 if (result != null) {
 
-                    Student student1 = new Student(user);
-                    List<StudentClass> teacherClasses = DataUtils.getStudentClassListFromJsonString(result);
+                    Employee student1 = new Employee(user);
+                    List<EmployeeClass> teacherClasses = DataUtils.getMeetingListFromJsonString(result);
 
                     if (student1.getStudentClassList().size() != teacherClasses.size()) {
 
                         student1.getStudentClassList().clear();
                         student1.getStudentClassList().addAll(teacherClasses);
 
-                        userUtils.saveUserWithDataToSharedPrefs(user, Student.class);
+                        userUtils.saveUserWithDataToSharedPrefs(user, Employee.class);
 
                     }
                 }

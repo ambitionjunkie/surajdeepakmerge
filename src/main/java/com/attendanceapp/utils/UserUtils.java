@@ -13,6 +13,7 @@ import android.support.annotation.Nullable;
 import com.attendanceapp.AppConstants;
 import com.attendanceapp.SendLocationService;
 import com.attendanceapp.SplashActivity;
+import com.attendanceapp.models.Employee;
 import com.attendanceapp.models.User;
 import com.attendanceapp.models.UserRole;
 import com.attendanceapp.services.BeaconMonitorService;
@@ -84,7 +85,9 @@ public final class UserUtils {
     public void saveUserToSharedPrefs(User user) {
         sharedPreferences.edit().putString(AppConstants.KEY_LOGGED_IN_USER, gson.toJson(user)).apply();
     }
-
+    public void saveUserToSharedPrefsss(Employee user) {
+        sharedPreferences.edit().putString(AppConstants.KEY_LOGGED_IN_USER_DATA, gson.toJson(user)).apply();
+    }
     public void clearSharedPrefs() {
         sharedPreferences.edit().clear().apply();
     }

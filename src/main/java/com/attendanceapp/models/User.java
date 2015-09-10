@@ -16,7 +16,7 @@ public class User implements Serializable {
     private ArrayList<String> parentEmailList = new ArrayList<>();
 
     private ArrayList<Event> eventArrayList = new ArrayList<>();
-
+    private ArrayList<EmployeeClass> CompanyArrayList = new ArrayList<>();
     public User() {
     }
 
@@ -161,5 +161,13 @@ public class User implements Serializable {
 
     public ArrayList<Event> getEventArrayList() {
         return eventArrayList;
+    }
+
+    public ArrayList<EmployeeClass> getCompanyArrayList() {
+        return CompanyArrayList;
+    }
+
+    public void setCompanyArrayList(ArrayList<EmployeeClass> companyArrayList) {
+        CompanyArrayList = companyArrayList;
     }
 }

@@ -107,6 +107,7 @@ public final class DataUtils {
 
 
             JSONObject zeroObject = dataArray.getJSONObject(0);
+
             JSONArray classArray = zeroObject.getJSONArray("Teacher");
 
             if (classArray != null) {
@@ -122,6 +123,41 @@ public final class DataUtils {
                     list.add(studentClass);
                 }
             }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    public static List<EmployeeClass> getMeetingListFromJsonString(String jsonString) {
+        List<EmployeeClass> list = new ArrayList<>();
+        Employee student=new Employee();
+        try {
+            JSONObject userDataJsonObject = new JSONObject(jsonString);
+            JSONArray dataArray = userDataJsonObject.getJSONArray("Data");
+
+
+           // JSONObject zeroObject = dataArray.getJSONObject(0);
+           // JSONArray classArray = zeroObject.getJSONArray("Company");
+
+
+                for (int i = 0; i < dataArray.length(); i++) {
+                    JSONObject index = dataArray.getJSONObject(i);
+
+                    if (index.has("Event")) {
+                        JSONObject jsonObject1 = index.getJSONObject("Company");
+                        EmployeeClass studentClass = new EmployeeClass();
+
+                        studentClass.setManagerId(jsonObject1.getString("id"));
+                        //studentClass.set(jsonObject1.getString("user_id"));
+                        studentClass.setMeetingName(jsonObject1.getString("companyName"));
+                        studentClass.setMeetingUniqueCode(jsonObject1.getString("meetingCode"));
+
+                        student.getStudentClassList().add(studentClass);
+                    }
+                }
+
+
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -642,17 +678,21 @@ public final class DataUtils {
                     attendance.setStudentId(jsonObject1.getString("employee_id"));
                     attendance.setClassId(jsonObject1.getString("company_id"));
                     attendance.setClassCode(jsonObject1.getString("companyCode"));
-                    attendance.setIsPresent("p".equalsIgnoreCase(jsonObject1.getString("attend")));
+                    attendance.setIsPresent("P".equalsIgnoreCase(jsonObject1.getString("attend")));
                     attendance.setCreateDate(jsonObject1.getString("created"));
 
-                   /* if (index.has("Student")) {
-                        JSONObject jsonObject2 = index.getJSONObject("Student");
-                        attendance.setParentEmail(jsonObject2.getString("parent_email"));
-                        attendance.setStudentEmail(jsonObject2.getString("student_email"));
+                  if (index.has("Employee")) {
+                        JSONObject jsonObject2 = index.getJSONObject("Employee");
+                      if(jsonObject2.has("parent_email")) {
+                          attendance.setParentEmail(jsonObject2.getString("parent_email"));
+                      }
+                        attendance.setStudentEmail(jsonObject2.getString("employee_email"));
 //                attendance.setUsername(jsonObject2.getString("student_name"));
-                        attendance.setStudentName(jsonObject2.getString("student_email").substring(0, jsonObject2.getString("student_email").indexOf("@")));
-                        attendance.setStudentImage(jsonObject2.getString("image"));
-                    }*/
+                        attendance.setStudentName(jsonObject2.getString("employee_email").substring(0, jsonObject2.getString("employee_email").indexOf("@")));
+                      if(jsonObject2.has("image")) {
+                          attendance.setStudentImage(jsonObject2.getString("image"));
+                      }
+                    }
                 }else if(index.has("EventeeAttendance")){
                     JSONObject jsonObject1 = index.getJSONObject("EventeeAttendance");
 
@@ -851,6 +891,25 @@ public final class DataUtils {
 
                     JSONObject studentObject = index.getJSONObject("Student");
                     String studentEmail = studentObject.getString("student_email");
+                    attendance.setStudentEmail(studentEmail);
+
+                    List<Attendance> list = map.containsKey(studentEmail) ? map.get(studentEmail) : new ArrayList<Attendance>();
+                    list.add(attendance);
+
+                    map.put(studentEmail, list);
+                }else if (index.has("EmployeeAttendance"))
+                {
+                    JSONObject attendanceObject = index.getJSONObject("EmployeeAttendance");
+
+                    attendance.setTeacherId(attendanceObject.getString("user_id"));
+                    attendance.setStudentId(attendanceObject.getString("employee_id"));
+                    attendance.setClassId(attendanceObject.getString("company_id"));
+                    attendance.setClassCode(attendanceObject.getString("companyCode"));
+                    attendance.setIsPresent("p".equalsIgnoreCase(attendanceObject.getString("attend")));
+                    attendance.setCreateDate(attendanceObject.getString("created"));
+
+                    JSONObject studentObject = index.getJSONObject("Employee");
+                    String studentEmail = studentObject.getString("employee_email");
                     attendance.setStudentEmail(studentEmail);
 
                     List<Attendance> list = map.containsKey(studentEmail) ? map.get(studentEmail) : new ArrayList<Attendance>();

@@ -134,6 +134,9 @@
             android:name=".activities.ReportsActivity"
             android:windowSoftInputMode="stateHidden|adjustPan" />
         <activity
+            android:name=".activities.Manager_ReportsActivity"
+            android:windowSoftInputMode="stateHidden|adjustPan" />
+        <activity
             android:name=".Search_result"
             android:windowSoftInputMode="stateHidden|adjustPan" />
         <activity
@@ -242,6 +245,9 @@
             android:name=".activities.Attendee_AddEventActivity"
             android:windowSoftInputMode="stateHidden|adjustPan" />
         <activity
+            android:name=".EmployeeAddMeetingActivity"
+            android:windowSoftInputMode="stateHidden|adjustPan" />
+        <activity
             android:name=".activities.ShowEventUsersActivity"
             android:windowSoftInputMode="stateHidden|adjustPan" />
         <activity
@@ -261,6 +267,9 @@
             android:windowSoftInputMode="stateHidden|adjustPan" />
         <activity
             android:name=".activities.EventAttendanceActivity"
+            android:windowSoftInputMode="stateHidden|adjustPan" />
+        <activity
+            android:name=".activities.EmployeeAttendanceActivity"
             android:windowSoftInputMode="stateHidden|adjustPan" />
         <activity
             android:name=".activities.CreateClassEventCompanyActivity"
