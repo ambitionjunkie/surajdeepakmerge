@@ -1,5 +1,7 @@
 package com.attendanceapp.utils;
 
+import android.widget.Toast;
+
 import com.attendanceapp.models.Attendance;
 import com.attendanceapp.models.Attendee;
 import com.attendanceapp.models.ClassEventCompany;
@@ -1000,23 +1002,25 @@ public final class DataUtils {
                     */
                     if (jsonObject.has("startTime")) {
                         calendar.setTime(simpleDateFormat.parse(jsonObject.getString("startTime")));
-                        teacherClass.setStartTime(calendar);
+                       // System.out.println("This is start time"+ simpleDateFormat.parse(jsonObject.getString("startTime")));
+                        teacherClass.setStartTime(jsonObject.getString("startTime"));
                     }
                     if (jsonObject.has("endTime")) {
                         calendar.setTime(simpleDateFormat.parse(jsonObject.getString("endTime")));
-                        teacherClass.setEndTime(calendar);
+                        teacherClass.setEndTime(jsonObject.getString("endTime"));
                     }
 
                     simpleDateFormat.applyPattern("yyyy-MM-dd");
 
                     if (jsonObject.has("startDate") && !"null".equalsIgnoreCase(jsonObject.getString("startDate"))) {
-                        calendar.setTime(simpleDateFormat.parse(jsonObject.getString("startDate")));
-                        teacherClass.setStartDate(calendar);
+                       // calendar.setTime(simpleDateFormat.parse(jsonObject.getString("startDate")));
+                     //  System.out.println("This is start date"+ simpleDateFormat.parse(jsonObject.getString("startDate")));
+                        teacherClass.setStartDate(jsonObject.getString("startDate"));
                     }
 
                     if (jsonObject.has("endDate") && !"null".equalsIgnoreCase(jsonObject.getString("endDate"))) {
-                        calendar.setTime(simpleDateFormat.parse(jsonObject.getString("endDate")));
-                        teacherClass.setEndDate(calendar);
+                      //  calendar.setTime(simpleDateFormat.parse(jsonObject.getString("endDate")));
+                        teacherClass.setEndDate(jsonObject.getString("endDate"));
                     }
 //                    }
                     teacherClass.setRepeatType(getRepeatTypeFromString(jsonObject.getString("repeatType")));

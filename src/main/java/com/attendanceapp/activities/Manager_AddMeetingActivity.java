@@ -148,11 +148,11 @@ public class Manager_AddMeetingActivity extends Activity implements View.OnClick
 
             classNameEditText.setText(hostEvent.getName());
 
-            timeButton.setText(StringUtils.getTimeStringFromCalender(hostEvent.getStartTime()));
-            timeButton.setText(timeButton.getText() + " - " + StringUtils.getTimeStringFromCalender(hostEvent.getEndTime()));
-
-            dateButton.setText(StringUtils.getDateStringFromCalender(hostEvent.getStartDate()));
-            dateButton.setText(dateButton.getText() + " - " + StringUtils.getDateStringFromCalender(hostEvent.getEndDate()));
+//            timeButton.setText(StringUtils.getTimeStringFromCalender(hostEvent.getStartTime()));
+//            timeButton.setText(timeButton.getText() + " - " + StringUtils.getTimeStringFromCalender(hostEvent.getEndTime()));
+//
+//            dateButton.setText(StringUtils.getDateStringFromCalender(hostEvent.getStartDate()));
+//            dateButton.setText(dateButton.getText() + " - " + StringUtils.getDateStringFromCalender(hostEvent.getEndDate()));
 
             ((TextView) findViewById(R.id.txtTitle)).setText(teacherClass.getUniqueCode());
             dayButton.setText(hostEvent.getRepeatType().toString());
@@ -323,21 +323,21 @@ public class Manager_AddMeetingActivity extends Activity implements View.OnClick
         View view = layoutInflater.inflate(R.layout.time_picker, null, false);
         final TimePicker timePicker = (TimePicker) view.findViewById(R.id.time_picker);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(Manager_AddMeetingActivity.this);
-        builder.setTitle("Start Time");
-        builder.setView(view);
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                int hourOfDay = timePicker.getCurrentHour();
-                int minute = timePicker.getCurrentMinute();
-
-                timeButton.setText(StringUtils.getTimeStringFromHourMinute(hourOfDay, minute));
-                hostEvent.setStartTime(getCalenderFromTimePicker(timePicker));
-                getTimeFromUser("End Time");
-            }
-        });
-        builder.show();
+//        AlertDialog.Builder builder = new AlertDialog.Builder(Manager_AddMeetingActivity.this);
+//        builder.setTitle("Start Time");
+//        builder.setView(view);
+//        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+//            @Override
+//            public void onClick(DialogInterface dialog, int which) {
+//                int hourOfDay = timePicker.getCurrentHour();
+//                int minute = timePicker.getCurrentMinute();
+//
+//                timeButton.setText(StringUtils.getTimeStringFromHourMinute(hourOfDay, minute));
+//                hostEvent.setStartTime(getCalenderFromTimePicker(timePicker));
+//                getTimeFromUser("End Time");
+//            }
+//        });
+//        builder.show();
 
     }
 
@@ -357,7 +357,7 @@ public class Manager_AddMeetingActivity extends Activity implements View.OnClick
                 int dayOfMonth = datePicker.getDayOfMonth();
 
                 dateButton.setText("" + MONTHS[monthOfYear] + " " + dayOfMonth + ", " + year);
-                hostEvent.setStartDate(getDateFromDatePicker(datePicker));
+//                hostEvent.setStartDate(getDateFromDatePicker(datePicker));
 
                 getDateFromUser("Select End Date");
 
@@ -369,7 +369,7 @@ public class Manager_AddMeetingActivity extends Activity implements View.OnClick
                         int monthOfYear = datePicker.getMonth();
                         int dayOfMonth = datePicker.getDayOfMonth();
                         dateButton.setText(dateButton.getText() + " - " + MONTHS[monthOfYear] + " " + dayOfMonth + ", " + year);
-                        hostEvent.setEndDate(getDateFromDatePicker(datePicker));
+//                        hostEvent.setEndDate(getDateFromDatePicker(datePicker));
                     }
                 });
             }
@@ -652,14 +652,14 @@ public class Manager_AddMeetingActivity extends Activity implements View.OnClick
             }
 
 //            if (userRole != UserRole.Manager) {
-            calendar = hostEvent.getStartTime();
-            keysAndValues.put("startTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
-            calendar = hostEvent.getEndTime();
-            keysAndValues.put("endTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
-            calendar = hostEvent.getStartDate();
-            keysAndValues.put("startDate", String.format(formatForDate, calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR)));
-            calendar = hostEvent.getEndDate();
-            keysAndValues.put("endDate", String.format(formatForDate, calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR)));
+//            calendar = hostEvent.getStartTime();
+//            keysAndValues.put("startTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
+//            calendar = hostEvent.getEndTime();
+//            keysAndValues.put("endTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
+//            calendar = hostEvent.getStartDate();
+//            keysAndValues.put("startDate", String.format(formatForDate, calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR)));
+//            calendar = hostEvent.getEndDate();
+//            keysAndValues.put("endDate", String.format(formatForDate, calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR)));
 //            }
 
             keysAndValues.put("latitude", String.valueOf(hostEvent.getLatitude()));
@@ -776,7 +776,7 @@ public class Manager_AddMeetingActivity extends Activity implements View.OnClick
                 int minute = timePicker.getCurrentMinute();
 
                 timeButton.setText(timeButton.getText() + "  -  " + StringUtils.getTimeStringFromHourMinute(hourOfDay, minute));
-                hostEvent.setEndTime(getCalenderFromTimePicker(timePicker));
+//                hostEvent.setEndTime(getCalenderFromTimePicker(timePicker));
 
             }
         });
@@ -797,7 +797,7 @@ public class Manager_AddMeetingActivity extends Activity implements View.OnClick
                 int monthOfYear = datePicker.getMonth();
                 int dayOfMonth = datePicker.getDayOfMonth();
                 dateButton.setText(dateButton.getText() + " - " + MONTHS[monthOfYear] + " " + dayOfMonth + ", " + year);
-                hostEvent.setEndDate(getDateFromDatePicker(datePicker));
+//                hostEvent.setEndDate(getDateFromDatePicker(datePicker));
             }
         });
         builder.show();

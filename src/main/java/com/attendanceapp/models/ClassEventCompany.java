@@ -19,7 +19,7 @@ public class ClassEventCompany implements Serializable {
     private RepeatType repeatType;
     private TreeSet<Integer> repeatDates = new TreeSet<>();
     private TreeSet<SelectedDays> repeatDays = new TreeSet<>();
-    private Calendar startTime, endTime, startDate, endDate;
+    private String startTime, endTime, startDate, endDate;
 
     public String getId() {
         return id;
@@ -61,35 +61,35 @@ public class ClassEventCompany implements Serializable {
         this.uniqueCode = uniqueCode;
     }
 
-    public Calendar getStartTime() {
+    public String getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(Calendar startTime) {
+    public void setStartTime(String startTime) {
         this.startTime = startTime;
     }
 
-    public Calendar getEndTime() {
+    public String getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(Calendar endTime) {
+    public void setEndTime(String endTime) {
         this.endTime = endTime;
     }
 
-    public Calendar getStartDate() {
+    public String getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(Calendar startDate) {
+    public void setStartDate(String startDate) {
         this.startDate = startDate;
     }
 
-    public Calendar getEndDate() {
+    public String getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(Calendar endDate) {
+    public void setEndDate(String endDate) {
         this.endDate = endDate;
     }
 

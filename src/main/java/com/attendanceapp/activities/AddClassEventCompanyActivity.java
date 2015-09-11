@@ -17,6 +17,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,12 +51,12 @@ public class AddClassEventCompanyActivity extends Activity {
     public static final String EXTRA_SELECTED_CLASS_INDEX = "EXTRA_STUDENT_CLASS_INDEX";
 
     EditText codeEditText, nameEditText;
-    Button done, skip;
+    Button done, skip,justSave;
     ImageView saveButton, imgHelp;
     TextView addAnotherClass;
     LayoutInflater layoutInflater;
     SharedPreferences sharedPreferences;
-
+    RelativeLayout resetLayout;
     private UserUtils userUtils;
     private User user;
     private UserRole userRole;
@@ -80,14 +81,21 @@ public class AddClassEventCompanyActivity extends Activity {
         addAnotherClass = (TextView) findViewById(R.id.addAnotherClass);
         skip = (Button) findViewById(R.id.skip);
         done = (Button) findViewById(R.id.done);
-
-        saveButton.setOnClickListener(saveButtonClickListener);
+        justSave=(Button) findViewById(R.id.justSave);
+        resetLayout=(RelativeLayout) findViewById(R.id.resetLayout);
+        justSave.setOnClickListener(saveButtonClickListener);
 
         layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         sharedPreferences = AndroidUtils.getCommonSharedPrefs(getApplicationContext());
         userUtils = new UserUtils(this);
         user = userUtils.getUserFromSharedPrefs();
-
+        resetLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                nameEditText.setText("");
+                codeEditText.setText("");
+            }
+        });
         Bundle bundle = getIntent().getExtras();
 
         int role = bundle.getInt(AppConstants.EXTRA_USER_ROLE);
@@ -183,7 +191,7 @@ public class AddClassEventCompanyActivity extends Activity {
             } else if (userRole == UserRole.Employee) {
                 keysAndValues.put("company_code", code);
                 keysAndValues.put("employee_email", user.getEmail());
-
+               // keysAndValues.put("company_name", name);
                 urlToSendData = AppConstants.URL_ADD_COMPANY_BY_EMPLOYEE;
 
             }
@@ -211,7 +219,7 @@ public class AddClassEventCompanyActivity extends Activity {
                 urlToSendData = AppConstants.URL_ADD_EVENT_BY_ATTENDEE;
 
             } else if (userRole == UserRole.Employee) {
-                txtTitle = "Meeting Place";
+                txtTitle = "Meeting Setup";
                 title = "Meeting Place";
                 code = "Meeting code";
                 add = "Add another meeting";

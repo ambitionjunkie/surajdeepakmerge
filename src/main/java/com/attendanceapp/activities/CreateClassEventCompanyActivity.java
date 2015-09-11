@@ -50,7 +50,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeSet;
@@ -126,7 +129,7 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
         if (index != -1) {
             ClassEventCompany teacherClass = user.getClassEventCompanyArrayList().get(index);
             isEditClass = true;
-
+        System.out.println(teacherClass.getStartDate().toString()+" "+teacherClass.getEndDate().toString());
             teacherClassId = teacherClass.getId();
             classEventCompany.setId(teacherClassId);
             classEventCompany.setName(teacherClass.getName());
@@ -144,12 +147,12 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
 
 
             classNameEditText.setText(classEventCompany.getName());
+            System.out.println("This is the start time " + classEventCompany.getStartTime());
+            timeButton.setText(returnTime(classEventCompany.getStartTime()));
+            timeButton.setText(timeButton.getText() + " - " + returnTime(classEventCompany.getEndTime()));
 
-            timeButton.setText(StringUtils.getTimeStringFromCalender(classEventCompany.getStartTime()));
-            timeButton.setText(timeButton.getText() + " - " + StringUtils.getTimeStringFromCalender(classEventCompany.getEndTime()));
-
-            dateButton.setText(StringUtils.getDateStringFromCalender(classEventCompany.getStartDate()));
-            dateButton.setText(dateButton.getText() + " - " + StringUtils.getDateStringFromCalender(classEventCompany.getEndDate()));
+            dateButton.setText(returnDate(classEventCompany.getStartDate()));
+            dateButton.setText(dateButton.getText() + " - " + returnDate(classEventCompany.getEndDate()));
 
             ((TextView) findViewById(R.id.txtTitle)).setText(teacherClass.getUniqueCode());
             dayButton.setText(classEventCompany.getRepeatType().toString());
@@ -168,7 +171,38 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
         }
 
     }
+    public String returnDate(String oldFormat){
+        String mytime=oldFormat;
+        SimpleDateFormat dateFormat = new SimpleDateFormat(
+                "yyyy-MM-dd");
+        Date myDate = null;
+        try {
+            myDate = dateFormat.parse(mytime);
 
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        SimpleDateFormat timeFormat = new SimpleDateFormat("MMM dd, yyyy");
+
+        String finalDate = timeFormat.format(myDate);
+
+        //System.out.println(finalDate);
+        return finalDate;
+    }
+    public String returnTime(String oldFormat){
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat dateFormat2 = new SimpleDateFormat("hh:mm aa");
+        Date date=null;
+        try {
+            date = dateFormat.parse(oldFormat);
+
+        } catch (ParseException e) {
+        }
+        String out = dateFormat2.format(date);
+        return out;
+    }
     String title, name, code;
 
     private void setRoleBasedProperties(UserRole userRole) {
@@ -184,7 +218,7 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
                 name = "Event name";
 
             } else if (userRole == UserRole.Manager) {
-                title = "Meeting Place";
+                title = "Meeting Setup";
                 name = "Meeting Place";
                 code = "Company Code";
 
@@ -327,9 +361,13 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
             public void onClick(DialogInterface dialog, int which) {
                 int hourOfDay = timePicker.getCurrentHour();
                 int minute = timePicker.getCurrentMinute();
+                Calendar datetime = Calendar.getInstance();
+                datetime.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                datetime.set(Calendar.MINUTE, minute);
 
+                String strHrsToShow = (datetime.get(Calendar.HOUR) == 0) ?"12":datetime.get(Calendar.HOUR)+"";
                 timeButton.setText(StringUtils.getTimeStringFromHourMinute(hourOfDay, minute));
-                classEventCompany.setStartTime(getCalenderFromTimePicker(timePicker));
+                classEventCompany.setStartTime(datetime.get(Calendar.HOUR)+":"+datetime.get(Calendar.MINUTE));
                 getTimeFromUser("End Time");
             }
         });
@@ -353,7 +391,7 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
                 int dayOfMonth = datePicker.getDayOfMonth();
 
                 dateButton.setText("" + MONTHS[monthOfYear] + " " + dayOfMonth + ", " + year);
-                classEventCompany.setStartDate(getDateFromDatePicker(datePicker));
+                classEventCompany.setStartDate(year+"-"+monthOfYear+"-"+dayOfMonth);
 
                 getDateFromUser("Select End Date");
 
@@ -365,7 +403,7 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
                         int monthOfYear = datePicker.getMonth();
                         int dayOfMonth = datePicker.getDayOfMonth();
                         dateButton.setText(dateButton.getText() + " - " + MONTHS[monthOfYear] + " " + dayOfMonth + ", " + year);
-                        classEventCompany.setEndDate(getDateFromDatePicker(datePicker));
+                        classEventCompany.setEndDate(year+"-"+monthOfYear+"-"+dayOfMonth);
                     }
                 });
             }
@@ -648,15 +686,19 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
             }
 
 //            if (userRole != UserRole.Manager) {
-            calendar = classEventCompany.getStartTime();
-            keysAndValues.put("startTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
-            calendar = classEventCompany.getEndTime();
-            keysAndValues.put("endTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
-            calendar = classEventCompany.getStartDate();
-            keysAndValues.put("startDate", String.format(formatForDate, calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR)));
-            calendar = classEventCompany.getEndDate();
-            keysAndValues.put("endDate", String.format(formatForDate, calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR)));
+//            calendar = classEventCompany.getStartTime();
+//            keysAndValues.put("startTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
+//            calendar = classEventCompany.getEndTime();
+//            keysAndValues.put("endTime", String.format(formatForTime, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
+//            calendar = classEventCompany.getStartDate();
+//            keysAndValues.put("startDate", String.format(formatForDate, calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR)));
+//            calendar = classEventCompany.getEndDate();
+//            keysAndValues.put("endDate", String.format(formatForDate, calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR)));
 //            }
+            keysAndValues.put("startTime", classEventCompany.getStartTime());
+            keysAndValues.put("endTime", classEventCompany.getEndTime());
+            keysAndValues.put("startDate", classEventCompany.getStartDate());
+            keysAndValues.put("endDate", classEventCompany.getEndDate());
 
             keysAndValues.put("latitude", String.valueOf(classEventCompany.getLatitude()));
             keysAndValues.put("longitude", String.valueOf(classEventCompany.getLongitude()));
@@ -770,9 +812,13 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
             public void onClick(DialogInterface dialog, int which) {
                 int hourOfDay = timePicker.getCurrentHour();
                 int minute = timePicker.getCurrentMinute();
+                Calendar datetime = Calendar.getInstance();
+                datetime.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                datetime.set(Calendar.MINUTE, minute);
 
+                String strHrsToShow = (datetime.get(Calendar.HOUR) == 0) ?"12":datetime.get(Calendar.HOUR)+"";
                 timeButton.setText(timeButton.getText() + "  -  " + StringUtils.getTimeStringFromHourMinute(hourOfDay, minute));
-                classEventCompany.setEndTime(getCalenderFromTimePicker(timePicker));
+                classEventCompany.setEndTime(datetime.get(Calendar.HOUR)+":"+datetime.get(Calendar.MINUTE));
 
             }
         });
@@ -793,7 +839,7 @@ public class CreateClassEventCompanyActivity extends Activity implements View.On
                 int monthOfYear = datePicker.getMonth();
                 int dayOfMonth = datePicker.getDayOfMonth();
                 dateButton.setText(dateButton.getText() + " - " + MONTHS[monthOfYear] + " " + dayOfMonth + ", " + year);
-                classEventCompany.setEndDate(getDateFromDatePicker(datePicker));
+                classEventCompany.setEndDate(year+"-"+monthOfYear+"-"+dayOfMonth);
             }
         });
         builder.show();

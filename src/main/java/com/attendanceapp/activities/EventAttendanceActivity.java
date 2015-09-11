@@ -40,7 +40,7 @@ public class EventAttendanceActivity extends Activity {
     ListView listView;
 
     User student;
-    ManagerClass studentClass;
+    Event studentClass;
     List<Attendance> stringArrayList = new ArrayList<>();
     List<Attendance> absentArrayList = new ArrayList<>();
     ListAdapter listAdapter;
@@ -55,7 +55,7 @@ public class EventAttendanceActivity extends Activity {
 
         listView = (ListView) findViewById(R.id.absentListView);
 
-        studentClass = (ManagerClass) getIntent().getSerializableExtra(EXTRA_STUDENT_CLASS);
+        studentClass = (Event) getIntent().getSerializableExtra(EXTRA_STUDENT_CLASS);
         student = (User) getIntent().getSerializableExtra(EXTRA_STUDENT);
 
         updateData();

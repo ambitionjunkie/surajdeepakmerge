@@ -57,7 +57,7 @@ public final class StringUtils {
     public static String getTimeStringFromCalender(Calendar cal) {
         int hourOfDay = cal.get(Calendar.HOUR_OF_DAY);
         int minute = cal.get(Calendar.MINUTE);
-
+        //return hourOfDay+":"+minute;
         return getTimeStringFromHourMinute(hourOfDay,minute);
     }
 

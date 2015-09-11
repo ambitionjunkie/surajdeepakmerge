@@ -81,11 +81,26 @@
                 android:textCursorDrawable="@null"
                 android:textSize="20sp"/>
 
+            <Button
+                android:id="@+id/justSave"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="@color/white"
+                android:gravity="center"
+                android:text="Save"
+                android:textAllCaps="false"
+                android:textColor="@color/blue"
+                android:textSize="20sp" />
+            <RelativeLayout
+                android:id="@+id/resetLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp">
             <ImageView
                 android:id="@+id/saveButton"
                 android:layout_width="wrap_content"
                 android:layout_height="50dp"
-                android:layout_gravity="center"
+                android:layout_centerHorizontal="true"
                 android:layout_marginBottom="10dp"
                 android:layout_marginTop="10dp"
                 android:ems="30"
@@ -100,7 +115,7 @@
                 android:id="@+id/addAnotherClass"
                 android:layout_width="wrap_content"
                 android:layout_height="50dp"
-                android:layout_gravity="center"
+                android:layout_below="@+id/saveButton"
                 android:layout_marginBottom="10dp"
                 android:layout_marginTop="10dp"
                 android:ems="30"
@@ -109,6 +124,7 @@
                 android:textColor="@color/white"
                 android:textColorHint="@color/white"
                 android:textSize="20sp"/>
+            </RelativeLayout>
 
         </LinearLayout>
     </RelativeLayout>
